@@ -19,7 +19,7 @@ class _LoginpageState extends State<Loginpage> {
       body: Center(
         child: Container(
           width: 400,
-          margin: EdgeInsets.all(150),
+          margin: EdgeInsets.all(50),
           padding: EdgeInsets.all(30),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -96,7 +96,9 @@ class _LoginpageState extends State<Loginpage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton(onPressed: () {}, child: Text("Login")),
+                  ElevatedButton(onPressed: () {
+                    Navigator.pushNamed(context, '/home');
+                  }, child: Text("Login")),
                   SizedBox(width: 20),
                   ElevatedButton(onPressed: () {
                     Navigator.pushNamed(context, '/register');

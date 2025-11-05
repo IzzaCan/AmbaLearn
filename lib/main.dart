@@ -1,3 +1,4 @@
+import 'package:capstone_layout/pages/homepage.dart';
 import 'package:capstone_layout/pages/loginpage.dart';
 import 'package:flutter/material.dart';
 import 'package:capstone_layout/pages/registerpage.dart';
@@ -16,6 +17,7 @@ class Layout extends StatelessWidget {
       routes: {
         '/': (context) => Loginpage(),
         '/register': (context) => Registerpage(),
+        '/home': (context) => Homepage(),
       },
     );
   }

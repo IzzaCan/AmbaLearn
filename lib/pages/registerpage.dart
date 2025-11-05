@@ -19,7 +19,7 @@ class _RegisterpageState extends State<Registerpage> {
       body: Center(
         child: Container(
           width: 400,
-          margin: EdgeInsets.all(150),
+          margin: EdgeInsets.all(50),
           padding: EdgeInsets.all(30),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -47,7 +47,7 @@ class _RegisterpageState extends State<Registerpage> {
               Icon(Icons.login),
               SizedBox(height: 10),
               Text(
-                "Login",
+                "Register",
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -109,7 +109,9 @@ class _RegisterpageState extends State<Registerpage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton(onPressed: () {}, child: Text("Register")),
+                  ElevatedButton(onPressed: () {
+                    Navigator.pushNamed(context, '/');
+                  }, child: Text("Register")),
                 ],
               ),
               SizedBox(height: 20),
