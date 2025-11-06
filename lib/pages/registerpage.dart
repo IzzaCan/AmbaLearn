@@ -10,9 +10,9 @@ class Registerpage extends StatefulWidget {
 class _RegisterpageState extends State<Registerpage> {
   final TextEditingController userC = TextEditingController();
   final TextEditingController emailC = TextEditingController();
-  final TextEditingController passC =  TextEditingController();
+  final TextEditingController passC = TextEditingController();
   bool obscure = true;
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFFFF4E0),
@@ -44,7 +44,7 @@ class _RegisterpageState extends State<Registerpage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.login),
+              Icon(Icons.app_registration),
               SizedBox(height: 10),
               Text(
                 "Register",
@@ -109,19 +109,25 @@ class _RegisterpageState extends State<Registerpage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton(onPressed: () {
-                    Navigator.pushNamed(context, '/');
-                  }, child: Text("Register")),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/');
+                    },
+                    child: Text("Register"),
+                  ),
                 ],
               ),
               SizedBox(height: 20),
-              TextButton(onPressed: () {
-                Navigator.pushNamed(context, '/');
-              }, child: Text("Already have account?")),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/');
+                },
+                child: Text("Already have account?"),
+              ),
             ],
           ),
         ),
       ),
-    );  
+    );
   }
 }
