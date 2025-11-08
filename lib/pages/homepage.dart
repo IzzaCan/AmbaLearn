@@ -9,9 +9,9 @@ class Homepage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 37, 37, 37),
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 135, 0, 5),
+        backgroundColor: Color.fromARGB(255, 77, 0, 5),
         title: Text(
-          "Amba Learn",
+          "AmbaLearn",
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
@@ -32,7 +32,7 @@ class Homepage extends StatelessWidget {
                 child: IconButton(
                   icon: Icon(
                     Icons.account_circle,
-                    color: Color.fromARGB(255, 135, 0, 5),
+                    color: Color.fromARGB(255, 77, 0, 5),
                   ),
                   onPressed: () {
                     Scaffold.of(context).openEndDrawer();
@@ -49,7 +49,7 @@ class Homepage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: Color.fromARGB(255, 135, 0, 5)),
+              decoration: BoxDecoration(color: Color.fromARGB(255, 77, 0, 5)),
               child: Center(
                 child: Text(
                   "Riwayat",
@@ -82,7 +82,7 @@ class Homepage extends StatelessWidget {
         child: Column(
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: Color.fromARGB(255, 135, 0, 5)),
+              decoration: BoxDecoration(color: Color.fromARGB(255, 77, 0, 5)),
               child: Center(
                 child: Text(
                   "Akun",
@@ -93,6 +93,61 @@ class Homepage extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
+            ListTile(
+              leading: Icon(Icons.account_circle_outlined, color: Colors.white),
+              title: Text(
+                "Switch Account",
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    // Contoh data list
+                    List<String> items = [
+                      "Item 1",
+                      "Item 2",
+                      "Item 3",
+                      "Item 4",
+                      "Item 5",
+                      "Item 6",
+                    ];
+
+                    return AlertDialog(
+                      backgroundColor: Colors.white,
+                      title: Text("Pilih Akun"),
+                      content: Container(
+                        // Tentukan tinggi agar ListView terbatas
+                        height: 200,
+                        width: double.maxFinite,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              title: Text(items[index]),
+                              onTap: () {
+                                // Aksi saat item diklik
+                                print("Dipilih: ${items[index]}");
+                                Navigator.of(context).pop(); // Tutup dialog
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          child: Text("Batal"),
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Tutup dialog
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
             ListTile(
               leading: Icon(Icons.logout, color: Colors.white),
@@ -125,7 +180,7 @@ class Homepage extends StatelessWidget {
           ),
           Container(
             padding: EdgeInsets.all(10),
-            color: Color.fromARGB(255, 135, 0, 5),
+            color: Color.fromARGB(255, 77, 0, 5),
             child: Row(
               children: [
                 Expanded(
