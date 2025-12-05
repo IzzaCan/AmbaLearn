@@ -1,55 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import 'loginpage.dart';
 
-class Registerpage extends StatefulWidget {
-  const Registerpage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<Registerpage> createState() => _RegisterpageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterpageState extends State<Registerpage> {
+class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController userC = TextEditingController();
   final TextEditingController emailC = TextEditingController();
   final TextEditingController passC = TextEditingController();
   bool obscure = true;
+
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 37, 37, 37),
+      backgroundColor: const Color(0xFF252525),
       body: Center(
         child: Container(
           width: 400,
-          margin: EdgeInsets.all(50),
-          padding: EdgeInsets.all(30),
+          margin: const EdgeInsets.all(50),
+          padding: const EdgeInsets.all(30),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(255, 135, 0, 5),
-                Color.fromARGB(255, 77, 0, 5),
-              ],
+            gradient: const LinearGradient(
+              colors: [Color(0xFF870005), Color(0xFF4D0005)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-              color: Colors.black,
-              width: 1.0,
-              style: BorderStyle.solid,
-            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.7),
                 blurRadius: 50,
-                offset: Offset(0, 10),
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.app_registration, color: Colors.white),
-              SizedBox(height: 10),
-              Text(
+              const Icon(Icons.app_registration, color: Colors.white, size: 50),
+              const SizedBox(height: 10),
+              const Text(
                 "Register",
                 style: TextStyle(
                   fontSize: 26,
@@ -58,75 +56,86 @@ class _RegisterpageState extends State<Registerpage> {
                   letterSpacing: 1.2,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 controller: userC,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.person),
                   labelText: "Username",
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 controller: emailC,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.mail),
                   labelText: "Email",
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 controller: passC,
                 obscureText: obscure,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.lock),
+                  prefixIcon: const Icon(Icons.lock),
                   labelText: "Password",
                   filled: true,
                   fillColor: Colors.white,
                   suffixIcon: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        obscure = !obscure;
-                      });
-                    },
-                    child: Icon(
-                      obscure ? Icons.visibility_off : Icons.visibility,
-                    ),
+                    onTap: () => setState(() => obscure = !obscure),
+                    child: Icon(obscure ? Icons.visibility_off : Icons.visibility),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
+                  border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/');
-                    },
-                    child: Text("Register"),
-                  ),
-                ],
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: auth.isLoading
+                    ? null
+                    : () async {
+                        final res = await auth.register(
+                          userC.text,
+                          emailC.text,
+                          passC.text,
+                        );
+                        if (res != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res)),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Register successful")),
+                          );
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginPage()),
+                          );
+                        }
+                      },
+                child: auth.isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Register"),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 10),
               TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/');
-                },
-                child: Text(
-                  "Already have account?",
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                ),
+                child: const Text(
+                  "Already have an account? Login",
                   style: TextStyle(color: Colors.white),
                 ),
               ),

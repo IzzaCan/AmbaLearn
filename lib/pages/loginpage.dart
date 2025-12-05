@@ -1,136 +1,148 @@
-import 'package:capstone_layout/pages/homepage.dart';
-import 'package:capstone_layout/pages/registerpage.dart';
-import 'package:flutter/material.dart';
+// ignore_for_file: use_build_context_synchronously
 
-class Loginpage extends StatefulWidget {
-  const Loginpage({super.key});
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import 'homepage.dart';
+import 'registerpage.dart';
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<Loginpage> createState() => _LoginpageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginpageState extends State<Loginpage> {
-  bool obscure = true;
-  final TextEditingController userC = TextEditingController();
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController emailC = TextEditingController();
   final TextEditingController passC = TextEditingController();
+  bool obscure = true;
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 37, 37, 37),
-      body: Center(
-        child: Container(
-          width: 400,
-          margin: EdgeInsets.all(50),
-          padding: EdgeInsets.all(30),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(255, 135, 0, 5),
-                Color.fromARGB(255, 77, 0, 5),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.7),
-                blurRadius: 50,
-                offset: Offset(0, 10),
+      backgroundColor: const Color(0xFF252525),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: Container(
+            width: 400,
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF870005), Color(0xFF4D0005)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.login_rounded, color: Colors.white),
-              SizedBox(height: 10),
-              Text(
-                "Login",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: const Color.fromARGB(255, 250, 250, 250),
-                  letterSpacing: 1.2,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black,
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: userC,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.person),
-                  labelText: "Username",
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon and Title
+                const Icon(Icons.login_rounded, size: 50, color: Colors.white),
+                const SizedBox(height: 10),
+                const Text(
+                  "Login",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
                   ),
                 ),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: passC,
-                obscureText: obscure,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.lock),
-                  labelText: "Password",
-                  filled: true,
-                  fillColor: Colors.white,
-                  suffixIcon: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        obscure = !obscure;
-                      });
-                    },
-                    child: Icon(
-                      obscure ? Icons.visibility_off : Icons.visibility,
+
+                const SizedBox(height: 25),
+
+                // Email Input
+                TextField(
+                  controller: emailC,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.mail),
+                    labelText: "Email",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
+                ),
+                const SizedBox(height: 20),
+
+                // Password Input
+                TextField(
+                  controller: passC,
+                  obscureText: obscure,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.lock),
+                    labelText: "Password",
+                    filled: true,
+                    fillColor: Colors.white,
+                    suffixIcon: GestureDetector(
+                      onTap: () => setState(() => obscure = !obscure),
+                      child: Icon(
+                        obscure ? Icons.visibility_off : Icons.visibility,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => Homepage()),
-                        (Route<dynamic> route) => false,
-                      );
-                    },
-                    child: Text("Login"),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
+                const SizedBox(height: 25),
+
+                // Login Button
+                ElevatedButton(
+                  onPressed: auth.isLoading
+                      ? null
+                      : () async {
+                          final res = await auth.login(emailC.text, passC.text);
+
+                          if (!mounted) return;
+
+                          if (res != null) {
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text(res)));
+                          } else {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const Homepage(),
+                              ),
+                            );
+                          }
+                        },
+                  child: auth.isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Login"),
+                ),
+
+                const SizedBox(height: 15),
+
+                // Navigate to Register
+                TextButton(
+                  onPressed: () => Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => Registerpage()),
-                    (Route<dynamic> route) => false,
-                  );
-                },
-                child: Text(
-                  "Doesn't have account?",
-                  style: TextStyle(color: Colors.white),
+                    MaterialPageRoute(builder: (_) => const RegisterPage()),
+                  ),
+                  child: const Text(
+                    "Don't have an account? Register",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-              ),
-              SizedBox(height: 1),
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  "Forgot Password?",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
