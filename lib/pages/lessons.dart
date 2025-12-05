@@ -1,5 +1,7 @@
+// lessons.dart (Kode Full dengan Perubahan Lokasi Element)
 import 'package:capstone_layout/pages/exampage.dart';
 import 'package:capstone_layout/pages/homepage.dart';
+import 'package:capstone_layout/widgets/chat_bubble.dart';
 import 'package:flutter/material.dart';
 
 class LessonsPage extends StatefulWidget {
@@ -14,6 +16,9 @@ class _LessonsPageState extends State<LessonsPage> {
   final TextEditingController _messageController = TextEditingController();
 
   String currentLesson = "Ready to start your lesson?";
+
+  // Tambahkan list untuk menyimpan pesan chat dan elemen lain (seperti video)
+  final List<Map<String, dynamic>> _chatMessages = [];
 
   // Example lesson list
   final List<String> lessons = [
@@ -46,6 +51,100 @@ class _LessonsPageState extends State<LessonsPage> {
     ],
   };
 
+  // Widget terpisah untuk Placeholder Rekomendasi Video
+  Widget _buildVideoRecommendation(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+        padding: const EdgeInsets.all(10),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFF333333), // Dark Grey
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Placeholder Image
+            Container(
+              width: 80,
+              height: 50,
+              color: const Color.fromARGB(255, 77, 0, 5),
+              child: const Center(
+                child: Icon(
+                  Icons.play_circle_outline,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Video Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Rekomendasi Video",
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Navigasi ke pelajaran baru
+  void _changeLesson(String lessonTitle) {
+    setState(() {
+      currentLesson = lessonTitle;
+      // Hapus pesan lama dan tambahkan pesan AI baru
+      _chatMessages.clear();
+      _chatMessages.add({
+        "type": "text",
+        "message":
+            "Kita akan bahas **$lessonTitle**. Ini adalah pelajaran penting untuk memahami ...",
+        "isUser": false,
+      });
+      _chatMessages.add({
+        "type": "video",
+        "title": "Regresi Linear untuk Pemula (Full Course)",
+      });
+    });
+    Navigator.pop(context);
+  }
+
+  // Mengirim pesan (placeholder)
+  void _sendMessage() {
+    if (_messageController.text.isNotEmpty) {
+      setState(() {
+        _chatMessages.insert(0, {
+          "type": "text",
+          "message": _messageController.text,
+          "isUser": true,
+        });
+      });
+      _messageController.clear();
+      // TODO: Implement AI response logic here
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Receive course name from navigation argument
@@ -74,7 +173,7 @@ class _LessonsPageState extends State<LessonsPage> {
         ),
       ),
 
-      // Sidebar Drawer for Lessons
+      // Sidebar Drawer for Lessons (Sama seperti sebelumnya)
       drawer: Drawer(
         backgroundColor: const Color.fromARGB(255, 37, 37, 37),
         child: Column(
@@ -93,8 +192,6 @@ class _LessonsPageState extends State<LessonsPage> {
                 ),
               ),
             ),
-
-            // Back to main menu
             ListTile(
               leading: const Icon(Icons.arrow_back, color: Colors.white),
               title: const Text(
@@ -104,17 +201,14 @@ class _LessonsPageState extends State<LessonsPage> {
               onTap: () {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => Homepage()),
+                  MaterialPageRoute(builder: (context) => const Homepage()),
                   (Route<dynamic> route) => false,
                 );
               },
             ),
-
-            // Lessons list
             Expanded(
               child: ListView(
                 children: [
-                  // LESSONS HEADER
                   const Padding(
                     padding: EdgeInsets.only(left: 16, top: 10, bottom: 5),
                     child: Text(
@@ -125,8 +219,6 @@ class _LessonsPageState extends State<LessonsPage> {
                       ),
                     ),
                   ),
-
-                  // LESSONS LIST
                   ...lessons.map((lesson) {
                     return ListTile(
                       leading: const Icon(
@@ -137,16 +229,9 @@ class _LessonsPageState extends State<LessonsPage> {
                         lesson,
                         style: const TextStyle(color: Colors.white),
                       ),
-                      onTap: () {
-                        setState(() {
-                          currentLesson = lesson;
-                        });
-                        Navigator.pop(context);
-                      },
+                      onTap: () => _changeLesson(lesson),
                     );
                   }),
-
-                  // EXAM HEADER
                   const Padding(
                     padding: EdgeInsets.only(left: 16, top: 15, bottom: 5),
                     child: Text(
@@ -157,8 +242,6 @@ class _LessonsPageState extends State<LessonsPage> {
                       ),
                     ),
                   ),
-
-                  // EXAM MENU
                   ListTile(
                     leading: const Icon(
                       Icons.quiz_outlined,
@@ -171,7 +254,9 @@ class _LessonsPageState extends State<LessonsPage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ExamPage()),
+                        MaterialPageRoute(
+                          builder: (context) => const ExamPage(),
+                        ),
                       );
                     },
                   ),
@@ -185,121 +270,140 @@ class _LessonsPageState extends State<LessonsPage> {
       body: Column(
         children: [
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  currentLesson,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+            child: hasStarted
+                ? ListView.builder(
+                    reverse: true, // Untuk chat terbaru di bawah
+                    padding: const EdgeInsets.only(top: 10),
+                    itemCount: _chatMessages.length,
+                    itemBuilder: (context, index) {
+                      // Ambil index dari belakang karena reverse: true
+                      final chat =
+                          _chatMessages[_chatMessages.length - 1 - index];
 
-                const SizedBox(height: 20),
+                      if (chat["type"] == "video") {
+                        return _buildVideoRecommendation(chat["title"]);
+                      }
 
-                // HINT BUBBLE OTOMATIS
-                if (hasStarted)
-                  Column(
-                    children: [
-                      const Text(
-                        "Contoh pertanyaan:",
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      return ChatBubble(
+                        message: chat["message"],
+                        isUser: chat["isUser"],
+                      );
+                    },
+                  )
+                : Center(
+                    // Area sebelum Start ditekan
+                    child: Text(
+                      currentLesson,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 10),
-
-                      ...((hintQuestions[currentLesson] ??
-                              ["Tidak ada contoh pertanyaan"]))
-                          .map(
-                            (q) => Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.13),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.white24),
-                              ),
-                              child: Text(
-                                "💬 $q",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                          ),
-                    ],
+                    ),
                   ),
-              ],
-            ),
           ),
 
-          // Input section
+          // ========================= INPUT SECTION CONTAINER =========================
           Container(
             padding: const EdgeInsets.all(10),
             color: const Color.fromARGB(255, 77, 0, 5),
             child: hasStarted
-                ? Row(
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // TEXTFIELD
-                      Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          decoration: InputDecoration(
-                            hintText: "Type your answer...",
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
+                      // 1. HORIZONTAL HINT QUESTIONS (DIPINDAHKAN KE SINI)
+                      Container(
+                        height: 50,
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount:
+                              (hintQuestions[currentLesson] ?? []).length,
+                          itemBuilder: (context, index) {
+                            final question =
+                                (hintQuestions[currentLesson] ?? [])[index];
+                            return Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.13),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white24),
+                              ),
+                              child: Text(
+                                question,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
 
-                      const SizedBox(width: 5),
-
-                      // MIC BUTTON
-                      CircleAvatar(
-                        backgroundColor: Colors.white,
-                        child: IconButton(
-                          onPressed: () {
-                            // TODO: handle mic input
-                          },
-                          icon: const Icon(
-                            Icons.mic,
-                            color: Color.fromARGB(255, 135, 0, 5),
+                      // 2. INPUT BAR (TEXTFIELD + BUTTONS)
+                      Row(
+                        children: [
+                          // TEXTFIELD
+                          Expanded(
+                            child: TextField(
+                              controller: _messageController,
+                              onSubmitted: (value) => _sendMessage(),
+                              decoration: InputDecoration(
+                                hintText: "Type your message...",
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
 
-                      const SizedBox(width: 5),
+                          const SizedBox(width: 5),
 
-                      // SEND BUTTON
-                      CircleAvatar(
-                        backgroundColor: Colors.white,
-                        child: IconButton(
-                          onPressed: () {
-                            // TODO: handle sending messages
-                            _messageController.clear();
-                          },
-                          icon: const Icon(
-                            Icons.send,
-                            color: Color.fromARGB(255, 135, 0, 5),
+                          // MIC BUTTON
+                          CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: IconButton(
+                              onPressed: () {
+                                // TODO: handle mic input
+                              },
+                              icon: const Icon(
+                                Icons.mic,
+                                color: Color.fromARGB(255, 135, 0, 5),
+                              ),
+                            ),
                           ),
-                        ),
+
+                          const SizedBox(width: 5),
+
+                          // SEND BUTTON
+                          CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: IconButton(
+                              onPressed: _sendMessage,
+                              icon: const Icon(
+                                Icons.send,
+                                color: Color.fromARGB(255, 135, 0, 5),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   )
                 : Center(
+                    // Tombol Start
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(255, 200, 80, 80),
@@ -315,6 +419,18 @@ class _LessonsPageState extends State<LessonsPage> {
                         setState(() {
                           hasStarted = true;
                           currentLesson = lessons.first;
+                          // TAMBAHKAN PESAN AWAL AI DAN VIDEO
+                          _chatMessages.add({
+                            "type": "video",
+                            "title":
+                                "Regresi Linear untuk Pemula (Full Course)",
+                          });
+                          _chatMessages.add({
+                            "type": "text",
+                            "message":
+                                "Halo! Saya adalah AI Tutor Anda. Kita akan mulai dengan **Lesson 1: Introduction**. Materi ini menjelaskan dasar-dasar regresi linier. ...",
+                            "isUser": false,
+                          });
                         });
                       },
                       child: const Text(

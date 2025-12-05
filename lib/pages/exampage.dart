@@ -1,3 +1,4 @@
+import 'package:capstone_layout/pages/exam_score_page.dart';
 import 'package:flutter/material.dart';
 
 class ExamPage extends StatefulWidget {
@@ -257,7 +258,16 @@ class _ExamPageState extends State<ExamPage> {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/lessons');
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  // Mengirimkan placeholder skor: 2 benar dari 3 soal
+                  builder: (context) => const ExamScorePage(
+                    correctAnswers: 2,
+                    totalQuestions: 3,
+                  ),
+                ),
+              );
             },
             child: const Text("Submit"),
           ),
