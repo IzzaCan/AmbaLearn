@@ -1,6 +1,7 @@
 class ApiConfig {
   /// Base URL
-  static const String baseUrl = 'http://185.239.239.135:8080';
+  // static const String baseUrl = 'http://127.0.0.1:8080';
+  static const String baseUrl = 'http://45.156.85.205:8080';
 
   /// Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);
