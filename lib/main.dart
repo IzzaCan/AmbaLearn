@@ -7,7 +7,8 @@ import 'pages/loginpage.dart';
 import 'pages/registerpage.dart';
 import 'pages/user_settings_page.dart';
 import 'providers/auth_provider.dart';
-import 'providers/chat_provider.dart'; // Import the new provider
+import 'providers/chat_provider.dart';
+import 'providers/course_provider.dart';
 
 void main() {
   runApp(const AmbaLearn());
@@ -23,6 +24,7 @@ class AmbaLearn extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => CourseProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -31,7 +33,7 @@ class AmbaLearn extends StatelessWidget {
         routes: {
           '/login': (context) => const LoginPage(),
           '/register': (context) => const RegisterPage(),
-          '/home': (context) => const Homepage(),
+          '/home': (context) => const HomePage(),
           '/user_settings': (context) => const UserSettingPage(),
           '/courses': (context) => const CoursesPage(),
           '/lessons': (context) => const LessonsPage(),

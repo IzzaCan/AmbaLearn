@@ -1,35 +1,36 @@
-import 'package:capstone_layout/pages/user_settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/chat_provider.dart'; // Ensure this is imported
-import '../pages/chat_page.dart'; // Ensure this is imported
+import '../providers/chat_provider.dart';
+import '../pages/user_settings_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final chat = context.watch<ChatProvider>();
 
     return Drawer(
       backgroundColor: const Color(0xFF252525),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xFF4D0005)),
+          // ===== HEADER =====
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Color(0xFF4D0005)),
             child: Center(
               child: Text(
-                "AmbaLearn Menu",
-                style: const TextStyle(
+                "AmbaLearn",
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
 
-          // New Chat
+          // ===== NEW CHAT (DRAFT RESET) =====
           ListTile(
             leading: const Icon(Icons.add, color: Colors.white),
             title: const Text(
@@ -37,27 +38,26 @@ class AppDrawer extends StatelessWidget {
               style: TextStyle(color: Colors.white),
             ),
             onTap: () {
-              Navigator.pop(context); // Close drawer
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ChatPage(chatUid: null),
-                ),
-              );
+              Navigator.pop(context);
+              chat.startNewChat(); // ✅ draft only
             },
           ),
 
-          // Courses
+          // ===== OTHER MENU =====
           ListTile(
             leading: const Icon(Icons.school, color: Colors.white),
-            title: const Text("Courses", style: TextStyle(color: Colors.white)),
+            title: const Text(
+              "Courses",
+              style: TextStyle(color: Colors.white),
+            ),
             onTap: () {
+              Navigator.pop(context);
               Navigator.pushNamed(context, '/courses');
             },
           ),
 
           const Padding(
-            padding: EdgeInsets.only(left: 16, top: 10, bottom: 5),
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 6),
             child: Text(
               "Chats",
               style: TextStyle(
@@ -67,88 +67,90 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
 
-          // Chat history list
+          // ===== CHAT LIST =====
           Expanded(
-            child: Consumer<ChatProvider>(
-              builder: (context, chatProvider, child) {
-                if (chatProvider.isLoading) {
-                  return const Center(
+            child: chat.isLoadingSessions
+                ? const Center(
                     child: CircularProgressIndicator(color: Colors.white),
-                  );
-                }
-
-                if (chatProvider.sessions.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      "No chats yet",
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  itemCount: chatProvider.sessions.length,
-                  itemBuilder: (context, index) {
-                    final session = chatProvider.sessions[index];
-                    return ListTile(
-                      leading: const Icon(
-                        Icons.chat_bubble_outline,
-                        color: Colors.white,
-                      ),
-                      title: Text(
-                        session.title, // Uses title from backend
-                        style: const TextStyle(color: Colors.white),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        session.lastModified.split(
-                          'T',
-                        )[0], // Simple date formatting
-                        style: const TextStyle(
-                          color: Colors.white38,
-                          fontSize: 12,
+                  )
+                : chat.sessions.isEmpty
+                    ? const Center(
+                        child: Text(
+                          "No chats yet",
+                          style: TextStyle(color: Colors.white54),
                         ),
+                      )
+                    : ListView.builder(
+                        itemCount: chat.sessions.length,
+                        itemBuilder: (context, index) {
+                          final session = chat.sessions[index];
+                          final bool isActive =
+                              session.uid == chat.currentSessionUid;
+
+                          return ListTile(
+                            leading: Icon(
+                              Icons.chat_bubble_outline,
+                              color: isActive
+                                  ? Colors.orangeAccent
+                                  : Colors.white,
+                            ),
+                            title: Text(
+                              session.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: isActive
+                                    ? Colors.orangeAccent
+                                    : Colors.white,
+                                fontWeight: isActive
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            subtitle: Text(
+                              session.lastModified.split('T').first,
+                              style: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 12,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+
+                              if (session.uid !=
+                                  chat.currentSessionUid) {
+                                chat.loadSession(session.uid);
+                              }
+                            },
+                          );
+                        },
                       ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChatPage(
-                              chatUid: session.uid,
-                            ), // Pass the UID here
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            ),
           ),
 
           const Divider(color: Colors.white24),
 
-          // Profile / Logout
+          // ===== PROFILE =====
           Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(10),
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4D0005),
-                minimumSize: const Size.fromHeight(50),
+                minimumSize: const Size.fromHeight(48),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const UserSettingPage()),
-                );
-              },
-              icon: const Icon(Icons.person),
+              icon: const Icon(Icons.person, color: Colors.white),
               label: const Text(
                 "Profile",
                 style: TextStyle(color: Colors.white),
               ),
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const UserSettingPage(),
+                  ),
+                );
+              },
             ),
           ),
         ],

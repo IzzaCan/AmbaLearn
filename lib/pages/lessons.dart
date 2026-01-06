@@ -1,9 +1,13 @@
-// lessons.dart (Kode Full dengan Perubahan Lokasi Element)
 import 'package:capstone_layout/pages/exampage.dart';
 import 'package:capstone_layout/pages/homepage.dart';
 import 'package:capstone_layout/widgets/chat_bubble.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/course_provider.dart';
+import '../models/course_model.dart';
 
+/// LessonsPage - Following web implementation pattern
+/// Web pattern: GET first to check status, then render appropriate UI
 class LessonsPage extends StatefulWidget {
   const LessonsPage({super.key});
 
@@ -12,96 +16,361 @@ class LessonsPage extends StatefulWidget {
 }
 
 class _LessonsPageState extends State<LessonsPage> {
-  bool hasStarted = false; // controls if lesson has started
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
-  String currentLesson = "Ready to start your lesson?";
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is String) {
+        final provider = context.read<CourseProvider>();
+        // Load course detail first
+        provider.loadCourseDetail(args).then((success) {
+          if (success) {
+            // Then load first step status (like web redirects to first lesson)
+            provider.loadStepStatus(1);
+          }
+        });
+      }
+    });
+  }
 
-  // Tambahkan list untuk menyimpan pesan chat dan elemen lain (seperti video)
-  final List<Map<String, dynamic>> _chatMessages = [];
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-  // Example lesson list
-  final List<String> lessons = [
-    "Lesson 1: Introduction",
-    "Lesson 2: Concepts",
-    "Lesson 3: Practice",
-    "Lesson 4: Summary",
-  ];
-  // Example hint questions for each lesson
-  final Map<String, List<String>> hintQuestions = {
-    "Lesson 1: Introduction": [
-      "Apa tujuan dari materi ini?",
-      "Kenapa topik ini penting?",
-      "Bisakah jelaskan konsepnya secara sederhana?",
-    ],
-    "Lesson 2: Concepts": [
-      "Apa istilah penting di lesson ini?",
-      "Bagaimana konsep ini bekerja?",
-      "Apa perbedaan konsep A dan B?",
-    ],
-    "Lesson 3: Practice": [
-      "Bisa beri saya soal latihan?",
-      "Bagaimana langkah-langkah penyelesaiannya?",
-      "Apa kesalahan umum yang harus dihindari?",
-    ],
-    "Lesson 4: Summary": [
-      "Apa poin penting yang harus diingat?",
-      "Bisa rangkum materi ini?",
-      "Bagaimana saya menerapkan konsep ini?",
-    ],
-  };
+  /// Start button handler - Like web's start_lesson form POST
+  Future<void> _onStartStep() async {
+    final provider = context.read<CourseProvider>();
+    
+    // Get current active step number
+    final stepNumber = provider.activeStepNumber ?? 1;
+    
+    debugPrint("🎯 User clicked Start for step $stepNumber");
+    
+    // Call startLessonStep which will POST then reload
+    await provider.startLessonStep(stepNumber);
+  }
 
-  // Widget terpisah untuk Placeholder Rekomendasi Video
-  Widget _buildVideoRecommendation(String title) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-        padding: const EdgeInsets.all(10),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(0xFF333333), // Dark Grey
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Placeholder Image
-            Container(
-              width: 80,
-              height: 50,
-              color: const Color.fromARGB(255, 77, 0, 5),
-              child: const Center(
-                child: Icon(
-                  Icons.play_circle_outline,
+  /// Select step from drawer - Like web's navigation
+  Future<void> _onSelectStep(int stepNumber) async {
+    final provider = context.read<CourseProvider>();
+    
+    // Close drawer
+    Navigator.pop(context);
+    
+    debugPrint("🎯 User selected step $stepNumber from drawer");
+    
+    // Load status for selected step (GET request)
+    await provider.loadStepStatus(stepNumber);
+  }
+
+  /// Send message
+  void _onSendMessage() {
+    final message = _messageController.text.trim();
+    if (message.isEmpty) return;
+    
+    _messageController.clear();
+    context.read<CourseProvider>().sendChatMessage(message);
+  }
+
+  /// Auto-scroll to bottom
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<CourseProvider>(
+      builder: (context, provider, child) {
+        final course = provider.currentCourse;
+        final isLoading = provider.isLoadingDetail || provider.isSendingMessage;
+        final hasStarted = provider.isStepStarted;
+        final chatMessages = provider.chatMessages;
+        final activeStep = provider.activeStepNumber;
+
+        // Show error snackbar
+        if (provider.chatError != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(provider.chatError!),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+                action: SnackBarAction(
+                  label: 'Retry',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    if (activeStep != null) {
+                      provider.loadStepStatus(activeStep);
+                    }
+                  },
+                ),
+              ),
+            );
+            provider.clearError();
+          });
+        }
+
+        // Auto-scroll when messages change
+        if (chatMessages.isNotEmpty) {
+          _scrollToBottom();
+        }
+
+        return Scaffold(
+          backgroundColor: const Color(0xFF252525),
+          appBar: AppBar(
+            backgroundColor: const Color(0xFF4D0005),
+            title: Text(
+              course?.courseTitle ?? "Loading...",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            centerTitle: true,
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+          ),
+          drawer: _buildDrawer(course, activeStep),
+          body: Column(
+            children: [
+              // Show loading indicator at top when fetching data
+              if (provider.isSendingMessage && chatMessages.isEmpty)
+                const LinearProgressIndicator(
+                  backgroundColor: Color(0xFF4D0005),
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              
+              Expanded(
+                child: provider.isLoadingDetail
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                    : hasStarted
+                    ? _buildChatArea(chatMessages, provider.isSendingMessage)
+                    : _buildNotStartedArea(course, activeStep, isLoading),
+              ),
+              _buildInputArea(hasStarted, provider.isSendingMessage),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDrawer(Course? course, int? activeStep) {
+    return Drawer(
+      backgroundColor: const Color(0xFF252525),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Color(0xFF4D0005)),
+            child: Center(
+              child: Text(
+                "AmbaLearn Lessons",
+                style: TextStyle(
                   color: Colors.white,
-                  size: 30,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            // Video Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Rekomendasi Video",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                  Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+          ),
+          ListTile(
+            leading: const Icon(Icons.arrow_back, color: Colors.white),
+            title: const Text(
+              "Back to Home",
+              style: TextStyle(color: Colors.white),
+            ),
+            onTap: () {
+              context.read<CourseProvider>().clearCurrentCourse();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+                (Route<dynamic> route) => false,
+              );
+            },
+          ),
+          const Padding(
+            padding: EdgeInsets.only(left: 16, top: 10, bottom: 5),
+            child: Text(
+              "Lessons",
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(
+            child: course?.steps == null || course!.steps.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No lessons available",
+                      style: TextStyle(color: Colors.white54),
                     ),
+                  )
+                : ListView.builder(
+                    itemCount: course.steps.length,
+                    itemBuilder: (context, index) {
+                      final step = course.steps[index];
+                      final isActive = step.stepNumber == activeStep;
+                      return ListTile(
+                        leading: Icon(
+                          isActive
+                              ? Icons.play_circle_filled
+                              : Icons.menu_book_outlined,
+                          color: isActive ? Colors.orangeAccent : Colors.white,
+                        ),
+                        title: Text(
+                          "Step ${step.stepNumber}: ${step.title}",
+                          style: TextStyle(
+                            color: isActive
+                                ? Colors.orangeAccent
+                                : Colors.white,
+                            fontWeight: isActive
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        onTap: () => _onSelectStep(step.stepNumber),
+                      );
+                    },
                   ),
-                ],
+          ),
+          const Divider(color: Colors.white24),
+          const Padding(
+            padding: EdgeInsets.only(left: 16, top: 5, bottom: 5),
+            child: Text(
+              "Exam",
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.quiz_outlined, color: Colors.white),
+            title: const Text(
+              "Final Exam",
+              style: TextStyle(color: Colors.white),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ExamPage()),
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+
+  /// Not started view - Like web's lesson_not_started.html
+  Widget _buildNotStartedArea(Course? course, int? stepNumber, bool isLoading) {
+    // Find the current step details
+    final currentStep = course?.steps.firstWhere(
+      (s) => s.stepNumber == stepNumber,
+      orElse: () => course.steps.first,
+    );
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.school, size: 80, color: Colors.white24),
+            const SizedBox(height: 24),
+            
+            if (currentStep != null) ...[
+              Text(
+                "Step ${currentStep.stepNumber}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white54,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                currentStep.title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 24,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+
+            // Start Button - Like web's form action
+            SizedBox(
+              width: 220,
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: isLoading ? null : _onStartStep,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFC85050),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFF4D0005),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  elevation: 4,
+                ),
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.play_arrow, size: 28),
+                label: Text(
+                  isLoading ? "Starting Lesson..." : "Start Lesson",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+            Text(
+              isLoading
+                  ? "Please wait, initializing lesson..."
+                  : "Select other lessons from the menu",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: isLoading ? Colors.orangeAccent : Colors.white38,
+                fontStyle: FontStyle.italic,
               ),
             ),
           ],
@@ -110,339 +379,119 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-  // Navigasi ke pelajaran baru
-  void _changeLesson(String lessonTitle) {
-    setState(() {
-      currentLesson = lessonTitle;
-      // Hapus pesan lama dan tambahkan pesan AI baru
-      _chatMessages.clear();
-      _chatMessages.add({
-        "type": "text",
-        "message":
-            "Kita akan bahas **$lessonTitle**. Ini adalah pelajaran penting untuk memahami ...",
-        "isUser": false,
-      });
-      _chatMessages.add({
-        "type": "video",
-        "title": "Regresi Linear untuk Pemula (Full Course)",
-      });
-    });
-    Navigator.pop(context);
+  /// Chat area - Like web's lesson_chat.html
+  Widget _buildChatArea(List<ChatMessage> messages, bool isSending) {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      itemCount: messages.length + (isSending && messages.isNotEmpty ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == messages.length) {
+          return const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: ChatBubble(message: "Thinking...", isUser: false),
+          );
+        }
+
+        final message = messages[index];
+        return ChatBubble(message: message.content, isUser: message.isUser);
+      },
+    );
   }
 
-  // Mengirim pesan (placeholder)
-  void _sendMessage() {
-    if (_messageController.text.isNotEmpty) {
-      setState(() {
-        _chatMessages.insert(0, {
-          "type": "text",
-          "message": _messageController.text,
-          "isUser": true,
-        });
-      });
-      _messageController.clear();
-      // TODO: Implement AI response logic here
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Receive course name from navigation argument
-    final String courseTitle =
-        ModalRoute.of(context)?.settings.arguments as String? ?? "Course";
-
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 37, 37, 37),
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 77, 0, 5),
-        title: Text(
-          courseTitle,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-      ),
-
-      // Sidebar Drawer for Lessons (Sama seperti sebelumnya)
-      drawer: Drawer(
-        backgroundColor: const Color.fromARGB(255, 37, 37, 37),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Color.fromARGB(255, 77, 0, 5)),
-              child: Center(
-                child: Text(
-                  "AmbaLearn Lessons",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.arrow_back, color: Colors.white),
-              title: const Text(
-                "Back to Home",
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Homepage()),
-                  (Route<dynamic> route) => false,
-                );
-              },
-            ),
-            Expanded(
-              child: ListView(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 16, top: 10, bottom: 5),
-                    child: Text(
-                      "Lessons",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  ...lessons.map((lesson) {
-                    return ListTile(
-                      leading: const Icon(
-                        Icons.menu_book_outlined,
-                        color: Colors.white,
-                      ),
-                      title: Text(
-                        lesson,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      onTap: () => _changeLesson(lesson),
-                    );
-                  }),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 16, top: 15, bottom: 5),
-                    child: Text(
-                      "Exam",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.quiz_outlined,
-                      color: Colors.white,
-                    ),
-                    title: const Text(
-                      "Final Exam",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ExamPage(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+  Widget _buildInputArea(bool hasStarted, bool isSending) {
+    if (!hasStarted) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4D0005),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
             ),
           ],
         ),
-      ),
+        child: const Center(
+          child: Text(
+            "Press 'Start Lesson' to begin this step",
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      );
+    }
 
-      body: Column(
+    return Container(
+      padding: const EdgeInsets.only(top: 12, bottom: 16, left: 12, right: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF4D0005),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
         children: [
           Expanded(
-            child: hasStarted
-                ? ListView.builder(
-                    reverse: true, // Untuk chat terbaru di bawah
-                    padding: const EdgeInsets.only(top: 10),
-                    itemCount: _chatMessages.length,
-                    itemBuilder: (context, index) {
-                      // Ambil index dari belakang karena reverse: true
-                      final chat =
-                          _chatMessages[_chatMessages.length - 1 - index];
-
-                      if (chat["type"] == "video") {
-                        return _buildVideoRecommendation(chat["title"]);
-                      }
-
-                      return ChatBubble(
-                        message: chat["message"],
-                        isUser: chat["isUser"],
-                      );
-                    },
-                  )
-                : Center(
-                    // Area sebelum Start ditekan
-                    child: Text(
-                      currentLesson,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+            child: TextField(
+              controller: _messageController,
+              enabled: !isSending,
+              style: const TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                hintText: "Type your message...",
+                hintStyle: TextStyle(color: Colors.grey[600]),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onSubmitted: isSending ? null : (_) => _onSendMessage(),
+              maxLines: null,
+              textInputAction: TextInputAction.send,
+            ),
           ),
-
-          // ========================= INPUT SECTION CONTAINER =========================
-          Container(
-            padding: const EdgeInsets.all(10),
-            color: const Color.fromARGB(255, 77, 0, 5),
-            child: hasStarted
-                ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 1. HORIZONTAL HINT QUESTIONS (DIPINDAHKAN KE SINI)
-                      Container(
-                        height: 50,
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount:
-                              (hintQuestions[currentLesson] ?? []).length,
-                          itemBuilder: (context, index) {
-                            final question =
-                                (hintQuestions[currentLesson] ?? [])[index];
-                            return Container(
-                              margin: const EdgeInsets.only(right: 8),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.13),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.white24),
-                              ),
-                              child: Text(
-                                question,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+          const SizedBox(width: 8),
+          CircleAvatar(
+            backgroundColor: Colors.white,
+            radius: 24,
+            child: IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.mic, color: Color(0xFF870005)),
+              tooltip: "Voice input (coming soon)",
+            ),
+          ),
+          const SizedBox(width: 8),
+          CircleAvatar(
+            backgroundColor: Colors.white,
+            radius: 24,
+            child: IconButton(
+              onPressed: isSending ? null : _onSendMessage,
+              icon: isSending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF870005)),
                       ),
-
-                      // 2. INPUT BAR (TEXTFIELD + BUTTONS)
-                      Row(
-                        children: [
-                          // TEXTFIELD
-                          Expanded(
-                            child: TextField(
-                              controller: _messageController,
-                              onSubmitted: (value) => _sendMessage(),
-                              decoration: InputDecoration(
-                                hintText: "Type your message...",
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 5),
-
-                          // MIC BUTTON
-                          CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: IconButton(
-                              onPressed: () {
-                                // TODO: handle mic input
-                              },
-                              icon: const Icon(
-                                Icons.mic,
-                                color: Color.fromARGB(255, 135, 0, 5),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 5),
-
-                          // SEND BUTTON
-                          CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: IconButton(
-                              onPressed: _sendMessage,
-                              icon: const Icon(
-                                Icons.send,
-                                color: Color.fromARGB(255, 135, 0, 5),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Center(
-                    // Tombol Start
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 200, 80, 80),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          hasStarted = true;
-                          currentLesson = lessons.first;
-                          // TAMBAHKAN PESAN AWAL AI DAN VIDEO
-                          _chatMessages.add({
-                            "type": "video",
-                            "title":
-                                "Regresi Linear untuk Pemula (Full Course)",
-                          });
-                          _chatMessages.add({
-                            "type": "text",
-                            "message":
-                                "Halo! Saya adalah AI Tutor Anda. Kita akan mulai dengan **Lesson 1: Introduction**. Materi ini menjelaskan dasar-dasar regresi linier. ...",
-                            "isUser": false,
-                          });
-                        });
-                      },
-                      child: const Text(
-                        "Start",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+                    )
+                  : const Icon(Icons.send, color: Color(0xFF870005)),
+              tooltip: "Send message",
+            ),
           ),
         ],
       ),

@@ -1,6 +1,10 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/chat_provider.dart';
+import '../providers/course_provider.dart';
 import 'loginpage.dart';
 
 class UserSettingPage extends StatelessWidget {
@@ -39,7 +43,14 @@ class UserSettingPage extends StatelessWidget {
             const Spacer(),
             ElevatedButton.icon(
               onPressed: () async {
-                await auth.logout(); // logout Google jika login pakai Google
+                // Reset all provider states BEFORE logout
+                context.read<ChatProvider>().resetState();
+                context.read<CourseProvider>().resetState();
+
+                // Logout (clears auth state and cookies)
+                await auth.logout();
+
+                // Navigate to login
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const LoginPage()),
