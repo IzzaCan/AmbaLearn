@@ -1,4 +1,4 @@
-import 'package:capstone_layout/pages/exampage.dart';
+import 'package:capstone_layout/pages/exam_permission_page.dart';
 import 'package:capstone_layout/pages/homepage.dart';
 import 'package:capstone_layout/widgets/chat_bubble.dart';
 import 'package:flutter/material.dart';
@@ -47,12 +47,12 @@ class _LessonsPageState extends State<LessonsPage> {
   /// Start button handler - Like web's start_lesson form POST
   Future<void> _onStartStep() async {
     final provider = context.read<CourseProvider>();
-    
+
     // Get current active step number
     final stepNumber = provider.activeStepNumber ?? 1;
-    
+
     debugPrint("🎯 User clicked Start for step $stepNumber");
-    
+
     // Call startLessonStep which will POST then reload
     await provider.startLessonStep(stepNumber);
   }
@@ -60,12 +60,12 @@ class _LessonsPageState extends State<LessonsPage> {
   /// Select step from drawer - Like web's navigation
   Future<void> _onSelectStep(int stepNumber) async {
     final provider = context.read<CourseProvider>();
-    
+
     // Close drawer
     Navigator.pop(context);
-    
+
     debugPrint("🎯 User selected step $stepNumber from drawer");
-    
+
     // Load status for selected step (GET request)
     await provider.loadStepStatus(stepNumber);
   }
@@ -74,7 +74,7 @@ class _LessonsPageState extends State<LessonsPage> {
   void _onSendMessage() {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
-    
+
     _messageController.clear();
     context.read<CourseProvider>().sendChatMessage(message);
   }
@@ -158,7 +158,7 @@ class _LessonsPageState extends State<LessonsPage> {
                   backgroundColor: Color(0xFF4D0005),
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              
+
               Expanded(
                 child: provider.isLoadingDetail
                     ? const Center(
@@ -276,7 +276,12 @@ class _LessonsPageState extends State<LessonsPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ExamPage()),
+                MaterialPageRoute(
+                  builder: (_) => ExamPermissionPage(
+                    courseUid: course!.uid,
+                    courseTitle: course.courseTitle,
+                  ),
+                ),
               );
             },
           ),
@@ -302,7 +307,7 @@ class _LessonsPageState extends State<LessonsPage> {
           children: [
             const Icon(Icons.school, size: 80, color: Colors.white24),
             const SizedBox(height: 24),
-            
+
             if (currentStep != null) ...[
               Text(
                 "Step ${currentStep.stepNumber}",
@@ -486,7 +491,9 @@ class _LessonsPageState extends State<LessonsPage> {
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF870005)),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF870005),
+                        ),
                       ),
                     )
                   : const Icon(Icons.send, color: Color(0xFF870005)),

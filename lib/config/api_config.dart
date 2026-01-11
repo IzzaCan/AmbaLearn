@@ -1,6 +1,5 @@
 class ApiConfig {
   /// Base URL
-  // static const String baseUrl = 'http://127.0.0.1:8080';
   static const String baseUrl = 'http://45.156.85.205:8080';
 
   /// Timeouts
@@ -21,7 +20,10 @@ class ApiConfig {
   static String courseDetail(String uid) => '/course/$uid';
   static String courseStepChat(String uid, int step) =>
       '/course/$uid/step/$step/chat';
+
+  /// Exam
   static String courseExam(String uid) => '/course/$uid/exam';
+  static String submitCourseExam(String uid) => '/course/$uid/exam/submit';
 
   /// Chat Sessions
   static const String chat = '/chat';
