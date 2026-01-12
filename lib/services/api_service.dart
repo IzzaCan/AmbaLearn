@@ -61,10 +61,15 @@ class ApiService {
   // =============================
   Future<User?> loginWithGoogle() async {
     try {
-      final googleSignIn = GoogleSignIn(scopes: ['email']);
-      final googleUser = await googleSignIn.signIn();
+      final googleSignIn = GoogleSignIn(
+        clientId: kIsWeb
+            ? ApiConfig.googleClientIdWeb
+            : ApiConfig.googleClientIdAndroid,
+        scopes: ['email', 'profile'],
+      );
 
-      if (googleUser == null) return null; // user batal login
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return null;
 
       final googleAuth = await googleUser.authentication;
 
@@ -76,12 +81,11 @@ class ApiService {
       if (response.statusCode == 200 && response.data != null) {
         return User.fromJson(response.data);
       }
-
       return null;
     } catch (e, st) {
       log("Google Login Error: $e\n$st");
-      // ignore: avoid_print
       print("GOOGLE SIGN IN ERROR: $e");
+      print("WEB CLIENT ID = ${ApiConfig.googleClientIdWeb}");
       return null;
     }
   }

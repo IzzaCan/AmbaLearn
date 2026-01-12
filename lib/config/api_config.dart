@@ -1,7 +1,17 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
   /// Base URL
   // "adb reverse" wont work for built apps. Use your PC's LAN IP instead.
-  static const String baseUrl = 'http://127.0.0.1:8080';
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://127.0.0.1:8080';
+    }
+    // Android Emulator
+    return 'http://10.0.2.2:8080';
+    // HP fisik → ganti IP LAN
+    // return 'http://192.168.1.10:8080';
+  }
 
   /// Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);
@@ -34,5 +44,7 @@ class ApiConfig {
 
   /// Google Auth Client
   static const String googleClientIdAndroid =
+      '916823130703-05gh5fr437sb3bstdarmf55udgvj6gcc.apps.googleusercontent.com';
+  static const String googleClientIdWeb =
       '916823130703-05gh5fr437sb3bstdarmf55udgvj6gcc.apps.googleusercontent.com';
 }
