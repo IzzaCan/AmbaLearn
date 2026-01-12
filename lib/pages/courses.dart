@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/theme_config.dart';
 import '../providers/course_provider.dart';
 import '../models/course_model.dart';
 
@@ -16,7 +17,6 @@ class _CoursesPageState extends State<CoursesPage> {
   @override
   void initState() {
     super.initState();
-    // Load courses when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CourseProvider>().loadCourses();
     });
@@ -29,6 +29,8 @@ class _CoursesPageState extends State<CoursesPage> {
   }
 
   void _showAddCourseDialog() {
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -36,60 +38,69 @@ class _CoursesPageState extends State<CoursesPage> {
         return Consumer<CourseProvider>(
           builder: (context, provider, child) {
             return AlertDialog(
-              backgroundColor: const Color(0xFF252525),
+              backgroundColor: context.surfaceColor,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(24),
               ),
-              title: const Text(
-                "Generate New Course",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Text("Generate Course", style: theme.textTheme.headlineSmall),
+                ],
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Text(
+                    "Enter a topic and AI will generate a personalized course for you.",
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: context.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: _topicController,
                     enabled: !provider.isGenerating,
-                    style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: "Topic",
                       hintText: "e.g. Python Basics, Machine Learning",
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      hintStyle: const TextStyle(color: Colors.white38),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Colors.white24),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Color(0xFFC85050)),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      disabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Colors.white12),
-                        borderRadius: BorderRadius.circular(10),
+                      prefixIcon: Icon(
+                        Icons.topic_rounded,
+                        color: context.textSecondary,
                       ),
                     ),
                   ),
                   if (provider.isGenerating) ...[
-                    const SizedBox(height: 20),
-                    const Row(
+                    const SizedBox(height: 24),
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFFC85050),
+                            strokeWidth: 2.5,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        const SizedBox(width: 14),
                         Text(
                           "Generating course...",
-                          style: TextStyle(color: Colors.white70),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: context.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -108,12 +119,14 @@ class _CoursesPageState extends State<CoursesPage> {
                     "Cancel",
                     style: TextStyle(
                       color: provider.isGenerating
-                          ? Colors.white24
-                          : Colors.white70,
+                          ? context.textSecondary.withOpacity(0.5)
+                          : context.textSecondary,
                     ),
                   ),
                 ),
-                TextButton(
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                  label: const Text("Generate"),
                   onPressed: provider.isGenerating
                       ? null
                       : () async {
@@ -125,25 +138,16 @@ class _CoursesPageState extends State<CoursesPage> {
                               _topicController.clear();
                               Navigator.pop(dialogContext);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
+                                SnackBar(
+                                  content: const Text(
                                     "Course generated successfully!",
                                   ),
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: context.successColor,
                                 ),
                               );
                             }
                           }
                         },
-                  child: Text(
-                    "Generate Course",
-                    style: TextStyle(
-                      color: provider.isGenerating
-                          ? Colors.white24
-                          : const Color(0xFFC85050),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ),
               ],
             );
@@ -155,21 +159,20 @@ class _CoursesPageState extends State<CoursesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF252525),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4D0005),
-        title: const Text(
-          "Courses",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: const Text("My Courses"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
         ),
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF870005),
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddCourseDialog,
-        child: const Icon(Icons.add, color: Colors.white),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text("New Course"),
       ),
       body: Consumer<CourseProvider>(
         builder: (context, provider, child) {
@@ -179,7 +182,7 @@ class _CoursesPageState extends State<CoursesPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(provider.error!),
-                  backgroundColor: Colors.red,
+                  backgroundColor: context.errorColor,
                 ),
               );
               provider.clearError();
@@ -188,51 +191,42 @@ class _CoursesPageState extends State<CoursesPage> {
 
           // Loading state
           if (provider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            );
-          }
-
-          // Empty state
-          if (provider.courses.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.school_outlined,
-                    size: 64,
-                    color: Colors.white24,
-                  ),
+                  CircularProgressIndicator(color: theme.colorScheme.primary),
                   const SizedBox(height: 16),
-                  const Text(
-                    "No courses yet",
-                    style: TextStyle(fontSize: 18, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Tap + to generate your first course",
-                    style: TextStyle(fontSize: 14, color: Colors.white38),
+                  Text(
+                    "Loading courses...",
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: context.textSecondary,
+                    ),
                   ),
                 ],
               ),
             );
           }
 
+          // Empty state
+          if (provider.courses.isEmpty) {
+            return _buildEmptyState(theme);
+          }
+
           // Course grid
           return Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
             child: GridView.builder(
               itemCount: provider.courses.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.85,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.75,
               ),
               itemBuilder: (context, index) {
                 final course = provider.courses[index];
-                return _buildCourseCard(course);
+                return _buildCourseCard(course, theme);
               },
             ),
           );
@@ -241,36 +235,75 @@ class _CoursesPageState extends State<CoursesPage> {
     );
   }
 
-  Widget _buildCourseCard(Course course) {
-    // Generate color based on difficulty
+  Widget _buildEmptyState(ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.school_outlined,
+                size: 64,
+                color: theme.colorScheme.primary.withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text("No courses yet", style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text(
+              "Create your first AI-generated course\nto start learning",
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: context.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: _showAddCourseDialog,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text("Create Course"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCourseCard(Course course, ThemeData theme) {
+    // Difficulty colors
     Color difficultyColor;
+    IconData difficultyIcon;
     switch (course.difficulty.toLowerCase()) {
       case 'beginner':
-        difficultyColor = Colors.green;
+        difficultyColor = AppColors.lightSuccess;
+        difficultyIcon = Icons.signal_cellular_alt_1_bar_rounded;
         break;
       case 'intermediate':
         difficultyColor = Colors.orange;
+        difficultyIcon = Icons.signal_cellular_alt_2_bar_rounded;
         break;
       case 'advanced':
-        difficultyColor = Colors.red;
+        difficultyColor = context.errorColor;
+        difficultyIcon = Icons.signal_cellular_alt_rounded;
         break;
       default:
-        difficultyColor = Colors.blue;
+        difficultyColor = theme.colorScheme.primary;
+        difficultyIcon = Icons.signal_cellular_alt_rounded;
     }
 
     return Card(
-      color: const Color(0xFF333333),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 4,
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          Navigator.pushNamed(
-            context,
-            '/lessons',
-            arguments: course.uid, // Pass course UID
-          );
+          Navigator.pushNamed(context, '/lessons', arguments: course.uid);
         },
-        borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -278,16 +311,45 @@ class _CoursesPageState extends State<CoursesPage> {
             Expanded(
               flex: 3,
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF4D0005), Color(0xFF870005)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.secondary,
+                    ],
                   ),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                 ),
-                child: const Center(
-                  child: Icon(Icons.school, size: 48, color: Colors.white54),
+                child: Stack(
+                  children: [
+                    // Pattern overlay
+                    Positioned.fill(
+                      child: Opacity(
+                        opacity: 0.1,
+                        child: Icon(
+                          Icons.school_rounded,
+                          size: 120,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    // Center icon
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.menu_book_rounded,
+                          size: 32,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -295,7 +357,7 @@ class _CoursesPageState extends State<CoursesPage> {
             Expanded(
               flex: 4,
               child: Padding(
-                padding: const EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -303,20 +365,19 @@ class _CoursesPageState extends State<CoursesPage> {
                       course.courseTitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      course.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11,
+                    const SizedBox(height: 6),
+                    Expanded(
+                      child: Text(
+                        course.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: context.textSecondary,
+                        ),
                       ),
                     ),
                     const Spacer(),
@@ -325,22 +386,33 @@ class _CoursesPageState extends State<CoursesPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
-                          vertical: 2,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: difficultyColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: difficultyColor.withOpacity(0.5),
-                          ),
+                          color: difficultyColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
-                          course.difficulty,
-                          style: TextStyle(
-                            color: difficultyColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              difficultyIcon,
+                              size: 12,
+                              color: difficultyColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                course.difficulty,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: difficultyColor,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                   ],

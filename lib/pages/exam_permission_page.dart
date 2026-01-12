@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import '../config/theme_config.dart';
 import '../providers/exam_provider.dart';
 import 'exam_page.dart';
 
@@ -85,22 +86,32 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
 
   /// Show permission denied dialog
   void _showPermissionDeniedDialog() {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Camera Permission Required'),
-        content: const Text(
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Camera Permission Required',
+          style: theme.textTheme.titleLarge,
+        ),
+        content: Text(
           'Camera access is required for exam monitoring. '
           'Please grant camera permission to continue.',
+          style: theme.textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               _requestCameraPermission();
             },
             child: const Text('Try Again'),
@@ -112,23 +123,33 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
 
   /// Show open settings dialog (for permanently denied)
   void _showOpenSettingsDialog() {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permission Permanently Denied'),
-        content: const Text(
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Permission Permanently Denied',
+          style: theme.textTheme.titleLarge,
+        ),
+        content: Text(
           'Camera permission has been permanently denied. '
           'Please enable it in app settings to take the exam.',
+          style: theme.textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               openAppSettings();
-              Navigator.pop(context);
+              Navigator.pop(ctx);
             },
             child: const Text('Open Settings'),
           ),
@@ -139,17 +160,21 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
 
   /// Show error dialog
   void _showErrorDialog() {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: const Text(
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Error', style: theme.textTheme.titleLarge),
+        content: Text(
           'An error occurred while requesting camera permission. '
           'Please try again.',
+          style: theme.textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('OK'),
           ),
         ],
@@ -159,23 +184,20 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF252525),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4D0005),
-        title: const Text(
-          'Exam Permission',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        centerTitle: true,
+        title: const Text('Exam Permission'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(32, 32, 32, 32 + bottomPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -183,13 +205,20 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
               Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4D0005).withOpacity(0.3),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theme.colorScheme.primary.withOpacity(0.2),
+                      theme.colorScheme.secondary.withOpacity(0.2),
+                    ],
+                  ),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.videocam,
+                child: Icon(
+                  Icons.videocam_rounded,
                   size: 80,
-                  color: Colors.white70,
+                  color: theme.colorScheme.primary,
                 ),
               ),
 
@@ -199,19 +228,19 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
               Text(
                 widget.courseTitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 24,
+                style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
                 ),
               ),
 
               const SizedBox(height: 16),
 
               // Subtitle
-              const Text(
+              Text(
                 'Final Exam',
-                style: TextStyle(fontSize: 18, color: Colors.white70),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
 
               const SizedBox(height: 48),
@@ -220,27 +249,25 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4D0005).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const Color(0xFFC85050).withOpacity(0.3),
+                    color: theme.colorScheme.primary.withOpacity(0.3),
                   ),
                 ),
                 child: Column(
                   children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: Colors.orangeAccent,
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: theme.colorScheme.secondary,
                       size: 32,
                     ),
                     const SizedBox(height: 12),
-                    const Text(
+                    Text(
                       'Camera Access Required',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -248,9 +275,8 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
                       'We need camera access to monitor exam integrity. '
                       'Your camera will be active during the exam.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.8),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: context.textSecondary,
                         height: 1.5,
                       ),
                     ),
@@ -269,24 +295,24 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
                       ? null
                       : _requestCameraPermission,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC85050),
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFF4D0005),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                     elevation: 4,
                   ),
                   icon: _isRequestingPermission
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
-                            color: Colors.white,
+                            color: theme.colorScheme.onPrimary,
                           ),
                         )
-                      : const Icon(Icons.check_circle_outline, size: 24),
+                      : const Icon(
+                          Icons.check_circle_outline_rounded,
+                          size: 24,
+                        ),
                   label: Text(
                     _isRequestingPermission
                         ? 'Requesting Permission...'
@@ -306,9 +332,9 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
                 onPressed: _isRequestingPermission
                     ? null
                     : () => Navigator.pop(context),
-                child: const Text(
+                child: Text(
                   'Cancel',
-                  style: TextStyle(color: Colors.white54, fontSize: 14),
+                  style: TextStyle(color: context.textSecondary, fontSize: 14),
                 ),
               ),
             ],

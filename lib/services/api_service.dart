@@ -4,8 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import '../config/api_config.dart';
-// import 'package:google_sign_in/google_sign_in.dart';
-// import '../models/user_model.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../models/user_model.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -59,30 +59,32 @@ class ApiService {
   // =============================
   // LOGIN GOOGLE
   // =============================
-  // Future<User?> loginWithGoogle() async {
-  //   try {
-  //     final googleSignIn = GoogleSignIn(scopes: ['email']);
-  //     final googleUser = await googleSignIn.signIn();
+  Future<User?> loginWithGoogle() async {
+    try {
+      final googleSignIn = GoogleSignIn(scopes: ['email']);
+      final googleUser = await googleSignIn.signIn();
 
-  //     if (googleUser == null) return null; // user batal login
+      if (googleUser == null) return null; // user batal login
 
-  //     final googleAuth = await googleUser.authentication;
+      final googleAuth = await googleUser.authentication;
 
-  //     final response = await dio.post(
-  //       ApiConfig.googleAuth,
-  //       data: {"credential": googleAuth.idToken},
-  //     );
+      final response = await dio.post(
+        ApiConfig.googleAuth,
+        data: {"credential": googleAuth.idToken},
+      );
 
-  //     if (response.statusCode == 200 && response.data != null) {
-  //       return User.fromJson(response.data);
-  //     }
+      if (response.statusCode == 200 && response.data != null) {
+        return User.fromJson(response.data);
+      }
 
-  //     return null;
-  //   } catch (e, st) {
-  //     log("Google Login Error: $e\n$st");
-  //     return null;
-  //   }
-  // }
+      return null;
+    } catch (e, st) {
+      log("Google Login Error: $e\n$st");
+      // ignore: avoid_print
+      print("GOOGLE SIGN IN ERROR: $e");
+      return null;
+    }
+  }
 
   // CLEAR COOKIES
   Future<void> clearCookies() async {

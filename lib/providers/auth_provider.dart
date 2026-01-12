@@ -112,6 +112,24 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // LOGIN GOOGLE
+  Future<String?> loginWithGoogle() async {
+    _setLoading(true);
+    try {
+      final user = await _api.loginWithGoogle();
+      if (user != null) {
+        _user = user;
+        notifyListeners();
+        return null;
+      }
+      return "Login with Google cancelled or failed";
+    } catch (e) {
+      return "Terjadi kesalahan: $e";
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // FETCH CURRENT USER
   Future<void> fetchCurrentUser() async {
     try {
