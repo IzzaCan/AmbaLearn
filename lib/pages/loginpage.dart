@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../providers/auth_provider.dart';
+import '../providers/language_provider.dart';
 import 'homepage.dart';
 import 'registerpage.dart';
 
@@ -123,7 +124,7 @@ class _LoginPageState extends State<LoginPage>
         ),
         const SizedBox(height: 24),
         Text(
-          "AmbaLearn",
+          context.watch<LanguageProvider>().getText('app_name'),
           style: theme.textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -170,13 +171,13 @@ class _LoginPageState extends State<LoginPage>
               children: [
                 // Title
                 Text(
-                  "Welcome Back",
+                  context.watch<LanguageProvider>().getText('welcome_back'),
                   style: theme.textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Sign in to continue learning",
+                  context.watch<LanguageProvider>().getText('sign_in_continue'),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: context.textSecondary,
                   ),
@@ -193,8 +194,12 @@ class _LoginPageState extends State<LoginPage>
                       Icons.email_outlined,
                       color: context.textSecondary,
                     ),
-                    labelText: "Email",
-                    hintText: "Enter your email",
+                    labelText: context.watch<LanguageProvider>().getText(
+                      'email',
+                    ),
+                    hintText: context.watch<LanguageProvider>().getText(
+                      'enter_email',
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -208,8 +213,12 @@ class _LoginPageState extends State<LoginPage>
                       Icons.lock_outline,
                       color: context.textSecondary,
                     ),
-                    labelText: "Password",
-                    hintText: "Enter your password",
+                    labelText: context.watch<LanguageProvider>().getText(
+                      'password',
+                    ),
+                    hintText: context.watch<LanguageProvider>().getText(
+                      'enter_password',
+                    ),
                     suffixIcon: IconButton(
                       onPressed: () => setState(() => obscure = !obscure),
                       icon: Icon(
@@ -255,7 +264,11 @@ class _LoginPageState extends State<LoginPage>
                               color: theme.colorScheme.onPrimary,
                             ),
                           )
-                        : const Text("Sign In"),
+                        : Text(
+                            context.watch<LanguageProvider>().getText(
+                              'sign_in',
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -267,7 +280,7 @@ class _LoginPageState extends State<LoginPage>
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        "OR",
+                        context.watch<LanguageProvider>().getText('or'),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: context.textSecondary,
                         ),
@@ -312,7 +325,9 @@ class _LoginPageState extends State<LoginPage>
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                     label: Text(
-                      "Continue with Google",
+                      context.watch<LanguageProvider>().getText(
+                        'continue_google',
+                      ),
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: context.textPrimary,
                       ),
@@ -326,7 +341,7 @@ class _LoginPageState extends State<LoginPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account? ",
+                      "${context.watch<LanguageProvider>().getText('no_account')} ",
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: context.textSecondary,
                       ),
@@ -337,7 +352,7 @@ class _LoginPageState extends State<LoginPage>
                         MaterialPageRoute(builder: (_) => const RegisterPage()),
                       ),
                       child: Text(
-                        "Sign Up",
+                        context.watch<LanguageProvider>().getText('sign_up'),
                         style: TextStyle(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,

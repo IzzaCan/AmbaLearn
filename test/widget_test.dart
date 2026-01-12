@@ -6,6 +6,7 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:capstone_layout/providers/theme_provider.dart';
+import 'package:capstone_layout/providers/language_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,8 +14,12 @@ import 'package:capstone_layout/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(AmbaLearn(themeProvider: ThemeProvider()));
+    await tester.pumpWidget(
+      AmbaLearn(
+        themeProvider: ThemeProvider(),
+        languageProvider: LanguageProvider(),
+      ),
+    );
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

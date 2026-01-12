@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/chat_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
 import 'loginpage.dart';
 
 class UserSettingPage extends StatelessWidget {
@@ -23,7 +24,7 @@ class UserSettingPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Settings"),
+        title: Text(context.watch<LanguageProvider>().getText('settings')),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
@@ -45,14 +46,20 @@ class UserSettingPage extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Appearance Section
-            _buildSectionTitle(context, "Appearance"),
+            _buildSectionTitle(
+              context,
+              context.watch<LanguageProvider>().getText('appearance'),
+            ),
             const SizedBox(height: 12),
             _buildThemeSelector(context, theme, themeProvider),
 
             const SizedBox(height: 32),
 
             // Account Section
-            _buildSectionTitle(context, "Account"),
+            _buildSectionTitle(
+              context,
+              context.watch<LanguageProvider>().getText('account'),
+            ),
             const SizedBox(height: 12),
             _buildAccountOptions(context, theme),
 
@@ -284,7 +291,7 @@ class UserSettingPage extends StatelessWidget {
             context: context,
             theme: theme,
             icon: Icons.notifications_outlined,
-            title: "Notifications",
+            title: context.watch<LanguageProvider>().getText('notifications'),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -293,16 +300,82 @@ class UserSettingPage extends StatelessWidget {
               );
             },
           ),
-          Divider(height: 1, color: context.dividerColor),
           _buildSettingItem(
             context: context,
             theme: theme,
             icon: Icons.language_rounded,
-            title: "Language",
-            trailing: "English",
+            title: context.watch<LanguageProvider>().getText('language'),
+            trailing: context.watch<LanguageProvider>().isIndonesian
+                ? "Indonesia"
+                : "English",
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Language settings coming soon")),
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: context.surfaceColor,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (ctx) => Consumer<LanguageProvider>(
+                  builder: (context, langProvider, _) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 12),
+                        Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: context.dividerColor,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          "Select Language",
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ListTile(
+                          leading: Text(
+                            "🇮🇩",
+                            style: theme.textTheme.headlineSmall,
+                          ),
+                          title: const Text("Bahasa Indonesia"),
+                          trailing: langProvider.isIndonesian
+                              ? Icon(
+                                  Icons.check_circle_rounded,
+                                  color: theme.colorScheme.primary,
+                                )
+                              : null,
+                          onTap: () {
+                            langProvider.setLanguage('id');
+                            Navigator.pop(ctx);
+                          },
+                        ),
+                        ListTile(
+                          leading: Text(
+                            "🇺🇸",
+                            style: theme.textTheme.headlineSmall,
+                          ),
+                          title: const Text("English"),
+                          trailing: !langProvider.isIndonesian
+                              ? Icon(
+                                  Icons.check_circle_rounded,
+                                  color: theme.colorScheme.primary,
+                                )
+                              : null,
+                          onTap: () {
+                            langProvider.setLanguage('en');
+                            Navigator.pop(ctx);
+                          },
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                    );
+                  },
+                ),
               );
             },
           ),
@@ -311,7 +384,7 @@ class UserSettingPage extends StatelessWidget {
             context: context,
             theme: theme,
             icon: Icons.help_outline_rounded,
-            title: "Help & Support",
+            title: context.watch<LanguageProvider>().getText('help_support'),
             onTap: () {
               ScaffoldMessenger.of(
                 context,
@@ -323,7 +396,7 @@ class UserSettingPage extends StatelessWidget {
             context: context,
             theme: theme,
             icon: Icons.info_outline_rounded,
-            title: "About",
+            title: context.watch<LanguageProvider>().getText('about'),
             onTap: () {
               showAboutDialog(
                 context: context,
@@ -407,7 +480,7 @@ class UserSettingPage extends StatelessWidget {
           ),
         ),
         icon: const Icon(Icons.logout_rounded),
-        label: const Text("Sign Out"),
+        label: Text(context.watch<LanguageProvider>().getText('logout')),
         onPressed: () async {
           // Show confirmation dialog
           final confirm = await showDialog<bool>(
@@ -416,19 +489,25 @@ class UserSettingPage extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: const Text("Sign Out"),
-              content: const Text("Are you sure you want to sign out?"),
+              title: Text(context.watch<LanguageProvider>().getText('logout')),
+              content: const Text(
+                "Are you sure you want to sign out?",
+              ), // Can localize this later too
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text("Cancel"),
+                  child: Text(
+                    context.watch<LanguageProvider>().getText('cancel'),
+                  ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.errorColor,
                   ),
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text("Sign Out"),
+                  child: Text(
+                    context.watch<LanguageProvider>().getText('logout'),
+                  ),
                 ),
               ],
             ),

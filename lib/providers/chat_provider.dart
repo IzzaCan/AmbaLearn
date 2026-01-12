@@ -98,6 +98,7 @@ class ChatProvider extends ChangeNotifier {
       // 2️⃣ Create session ONLY if draft
       if (_currentSessionUid == null) {
         final createRes = await _api.post(ApiConfig.createSession);
+
         if (createRes.statusCode != 200) {
           throw Exception("Failed to create session");
         }
@@ -110,20 +111,17 @@ class ChatProvider extends ChangeNotifier {
       // 3️⃣ Send message to backend
       final res = await _api.post(
         ApiConfig.chat,
-        data: {
-          "uid": _currentSessionUid,
-          "message": content,
-        },
+        data: {"uid": _currentSessionUid, "message": content},
       );
 
       if (res.statusCode == 200 && res.data != null) {
-        _messages.add({
-          "role": "assistant",
-          "content": res.data['reply'],
-        });
+        _messages.add({"role": "assistant", "content": res.data['reply']});
+      } else {
+        throw Exception("Invalid response from server");
       }
     } catch (e) {
       _error = "Failed to send message";
+      debugPrint("ChatProvider Error: $e");
       _messages.removeLast(); // rollback user msg
     } finally {
       _isSending = false;

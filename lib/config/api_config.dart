@@ -1,5 +1,6 @@
 class ApiConfig {
   /// Base URL
+  // "adb reverse" wont work for built apps. Use your PC's LAN IP instead.
   static const String baseUrl = 'http://127.0.0.1:8080';
 
   /// Timeouts
