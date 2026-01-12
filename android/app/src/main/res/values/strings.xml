@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AmbaLearn</string>
+    <!-- Manual Google Sign In Configuration -->
+    <string name="default_web_client_id">916823130703-05gh5fr437sb3bstdarmf55udgvj6gcc.apps.googleusercontent.com</string>
+</resources>

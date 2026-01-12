@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:camera/camera.dart';
+import '../config/theme_config.dart';
 import '../providers/exam_provider.dart';
 import '../models/exam_model.dart';
 import 'exam_result_page.dart';
@@ -87,16 +88,19 @@ class _ExamPageState extends State<ExamPage> {
 
   /// Show error and exit
   void _showErrorAndExit(String message) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Error', style: theme.textTheme.titleLarge),
+        content: Text(message, style: theme.textTheme.bodyMedium),
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // Close dialog
+              Navigator.pop(ctx); // Close dialog
               Navigator.pop(context); // Exit exam page
             },
             child: const Text('OK'),
@@ -109,27 +113,34 @@ class _ExamPageState extends State<ExamPage> {
   /// Submit exam
   Future<void> _submitExam() async {
     final provider = context.read<ExamProvider>();
+    final theme = Theme.of(context);
 
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Submit Exam?'),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Submit Exam?', style: theme.textTheme.titleLarge),
         content: Text(
           provider.isAllAnswered
               ? 'You have answered all questions. Submit your exam now?'
               : 'You have answered ${provider.answeredCount} of ${provider.totalQuestions} questions. '
-                'Unanswered questions will be marked as incorrect. Submit anyway?',
+                    'Unanswered questions will be marked as incorrect. Submit anyway?',
+          style: theme.textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textSecondary),
+            ),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFC85050),
+              backgroundColor: context.errorColor,
             ),
             child: const Text('Submit'),
           ),
@@ -149,16 +160,14 @@ class _ExamPageState extends State<ExamPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ExamResultPage(
-            courseTitle: widget.courseTitle,
-          ),
+          builder: (context) => ExamResultPage(courseTitle: widget.courseTitle),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(provider.error ?? 'Failed to submit exam'),
-          backgroundColor: Colors.red,
+          backgroundColor: context.errorColor,
         ),
       );
     }
@@ -166,25 +175,32 @@ class _ExamPageState extends State<ExamPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return WillPopScope(
       onWillPop: () async {
         // Prevent back navigation during exam
         final shouldExit = await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Exit Exam?'),
-            content: const Text(
+          builder: (ctx) => AlertDialog(
+            backgroundColor: context.surfaceColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text('Exit Exam?', style: theme.textTheme.titleLarge),
+            content: Text(
               'Are you sure you want to exit? Your progress will be lost.',
+              style: theme.textTheme.bodyMedium,
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () => Navigator.pop(ctx, false),
                 child: const Text('Stay'),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(ctx, true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: context.errorColor,
                 ),
                 child: const Text('Exit'),
               ),
@@ -196,31 +212,35 @@ class _ExamPageState extends State<ExamPage> {
       child: Consumer<ExamProvider>(
         builder: (context, provider, child) {
           if (provider.isLoadingExam) {
-            return _buildLoadingScreen();
+            return _buildLoadingScreen(theme);
           }
 
           if (provider.currentExam == null) {
-            return _buildErrorScreen(provider.error ?? 'Failed to load exam');
+            return _buildErrorScreen(
+              provider.error ?? 'Failed to load exam',
+              theme,
+            );
           }
 
-          return _buildExamScreen(provider);
+          return _buildExamScreen(provider, theme);
         },
       ),
     );
   }
 
-  Widget _buildLoadingScreen() {
+  Widget _buildLoadingScreen(ThemeData theme) {
     return Scaffold(
-      backgroundColor: const Color(0xFF252525),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(color: Colors.white),
+            CircularProgressIndicator(color: theme.colorScheme.primary),
             const SizedBox(height: 24),
             Text(
               'Loading exam...',
-              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
           ],
         ),
@@ -228,21 +248,24 @@ class _ExamPageState extends State<ExamPage> {
     );
   }
 
-  Widget _buildErrorScreen(String error) {
+  Widget _buildErrorScreen(String error, ThemeData theme) {
     return Scaffold(
-      backgroundColor: const Color(0xFF252525),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: context.errorColor,
+              ),
               const SizedBox(height: 24),
               Text(
                 error,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+                style: theme.textTheme.bodyLarge,
               ),
               const SizedBox(height: 32),
               ElevatedButton(
@@ -256,20 +279,15 @@ class _ExamPageState extends State<ExamPage> {
     );
   }
 
-  Widget _buildExamScreen(ExamProvider provider) {
+  Widget _buildExamScreen(ExamProvider provider, ThemeData theme) {
     final exam = provider.currentExam!;
     final currentQuestion = exam.questions[provider.currentQuestionIndex];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF252525),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4D0005),
         title: Text(
           widget.courseTitle,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
@@ -279,8 +297,8 @@ class _ExamPageState extends State<ExamPage> {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Icon(
-                Icons.videocam,
-                color: Colors.green[300],
+                Icons.videocam_rounded,
+                color: context.successColor,
                 size: 24,
               ),
             ),
@@ -289,7 +307,7 @@ class _ExamPageState extends State<ExamPage> {
       body: Column(
         children: [
           // Progress bar
-          _buildProgressBar(provider),
+          _buildProgressBar(provider, theme),
 
           // Question area
           Expanded(
@@ -298,27 +316,27 @@ class _ExamPageState extends State<ExamPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildQuestionNumber(provider),
+                  _buildQuestionNumber(provider, theme),
                   const SizedBox(height: 16),
-                  _buildQuestionText(currentQuestion),
+                  _buildQuestionText(currentQuestion, theme),
                   const SizedBox(height: 24),
-                  _buildOptions(currentQuestion, provider),
+                  _buildOptions(currentQuestion, provider, theme),
                 ],
               ),
             ),
           ),
 
           // Navigation buttons
-          _buildNavigationButtons(provider),
+          _buildNavigationButtons(provider, theme),
         ],
       ),
     );
   }
 
-  Widget _buildProgressBar(ExamProvider provider) {
+  Widget _buildProgressBar(ExamProvider provider, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: const Color(0xFF4D0005).withOpacity(0.3),
+      color: theme.colorScheme.primary.withOpacity(0.1),
       child: Column(
         children: [
           Row(
@@ -326,36 +344,42 @@ class _ExamPageState extends State<ExamPage> {
             children: [
               Text(
                 'Question ${provider.currentQuestionIndex + 1} of ${provider.totalQuestions}',
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Text(
                 'Answered: ${provider.answeredCount}/${provider.totalQuestions}',
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: provider.progressPercentage,
-            backgroundColor: Colors.white24,
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC85050)),
+            backgroundColor: context.dividerColor,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              theme.colorScheme.primary,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuestionNumber(ExamProvider provider) {
+  Widget _buildQuestionNumber(ExamProvider provider, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFC85050),
+        color: theme.colorScheme.secondary,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         'Question ${provider.currentQuestionIndex + 1}',
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: context.isDarkMode ? AppColors.darkBackground : Colors.white,
           fontWeight: FontWeight.bold,
           fontSize: 12,
         ),
@@ -363,26 +387,26 @@ class _ExamPageState extends State<ExamPage> {
     );
   }
 
-  Widget _buildQuestionText(ExamQuestion question) {
+  Widget _buildQuestionText(ExamQuestion question, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4D0005).withOpacity(0.2),
+        color: context.surfaceColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.dividerColor),
       ),
       child: Text(
         question.question,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          height: 1.5,
-        ),
+        style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
       ),
     );
   }
 
-  Widget _buildOptions(ExamQuestion question, ExamProvider provider) {
+  Widget _buildOptions(
+    ExamQuestion question,
+    ExamProvider provider,
+    ThemeData theme,
+  ) {
     final questionIndex = provider.currentQuestionIndex;
     final selectedAnswer = provider.getAnswer(questionIndex);
 
@@ -398,11 +422,13 @@ class _ExamPageState extends State<ExamPage> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFFC85050)
-                    : const Color(0xFF4D0005).withOpacity(0.2),
+                    ? theme.colorScheme.primary
+                    : context.surfaceColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFFC85050) : Colors.white12,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : context.dividerColor,
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -415,8 +441,8 @@ class _ExamPageState extends State<ExamPage> {
                       color: isSelected ? Colors.white : Colors.transparent,
                       border: Border.all(
                         color: isSelected
-                            ? const Color(0xFFC85050)
-                            : Colors.white54,
+                            ? theme.colorScheme.primary
+                            : context.textSecondary,
                         width: 2,
                       ),
                       shape: BoxShape.circle,
@@ -426,8 +452,8 @@ class _ExamPageState extends State<ExamPage> {
                         optionKey,
                         style: TextStyle(
                           color: isSelected
-                              ? const Color(0xFFC85050)
-                              : Colors.white,
+                              ? theme.colorScheme.primary
+                              : context.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -438,7 +464,7 @@ class _ExamPageState extends State<ExamPage> {
                     child: Text(
                       question.options[optionKey] ?? '',
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white,
+                        color: isSelected ? Colors.white : context.textPrimary,
                         fontSize: 15,
                       ),
                     ),
@@ -452,18 +478,19 @@ class _ExamPageState extends State<ExamPage> {
     );
   }
 
-  Widget _buildNavigationButtons(ExamProvider provider) {
+  Widget _buildNavigationButtons(ExamProvider provider, ThemeData theme) {
     final isFirstQuestion = provider.currentQuestionIndex == 0;
     final isLastQuestion =
         provider.currentQuestionIndex == provider.totalQuestions - 1;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPadding),
       decoration: BoxDecoration(
-        color: const Color(0xFF4D0005),
+        color: context.surfaceColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -476,11 +503,10 @@ class _ExamPageState extends State<ExamPage> {
             child: OutlinedButton.icon(
               onPressed: isFirstQuestion ? null : provider.previousQuestion,
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white54),
+                side: BorderSide(color: context.dividerColor),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              icon: const Icon(Icons.arrow_back, size: 20),
+              icon: const Icon(Icons.arrow_back_rounded, size: 20),
               label: const Text('Previous'),
             ),
           ),
@@ -495,21 +521,21 @@ class _ExamPageState extends State<ExamPage> {
                   ? null
                   : (isLastQuestion ? _submitExam : provider.nextQuestion),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC85050),
-                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               icon: provider.isSubmitting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: theme.colorScheme.onPrimary,
                       ),
                     )
                   : Icon(
-                      isLastQuestion ? Icons.check_circle : Icons.arrow_forward,
+                      isLastQuestion
+                          ? Icons.check_circle_rounded
+                          : Icons.arrow_forward_rounded,
                       size: 20,
                     ),
               label: Text(

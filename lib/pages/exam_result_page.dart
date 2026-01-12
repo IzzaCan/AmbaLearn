@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/theme_config.dart';
 import '../providers/exam_provider.dart';
 import '../models/exam_model.dart';
 
@@ -26,33 +27,31 @@ class ExamResultPage extends StatelessWidget {
             return _buildErrorScreen(context);
           }
 
+          final theme = Theme.of(context);
+          final bottomPadding = MediaQuery.of(context).padding.bottom;
+
           return Scaffold(
-            backgroundColor: const Color(0xFF252525),
             appBar: AppBar(
-              backgroundColor: const Color(0xFF4D0005),
               title: const Text(
                 'Exam Results',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
               centerTitle: true,
               automaticallyImplyLeading: false,
             ),
             body: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
               child: Column(
                 children: [
-                  _buildScoreCard(result),
+                  _buildScoreCard(result, theme, context),
                   const SizedBox(height: 32),
-                  _buildGradeSection(result),
+                  _buildGradeSection(result, theme, context),
                   const SizedBox(height: 32),
-                  _buildStatistics(result),
+                  _buildStatistics(result, theme, context),
                   const SizedBox(height: 32),
-                  _buildDetailedResults(result),
+                  _buildDetailedResults(result, theme, context),
                   const SizedBox(height: 32),
-                  _buildActionButtons(context),
+                  _buildActionButtons(context, theme),
                 ],
               ),
             ),
@@ -63,18 +62,19 @@ class ExamResultPage extends StatelessWidget {
   }
 
   Widget _buildErrorScreen(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF252525),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 24),
-            const Text(
-              'No exam results found',
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: context.errorColor,
             ),
+            const SizedBox(height: 24),
+            Text('No exam results found', style: theme.textTheme.bodyLarge),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
@@ -86,7 +86,11 @@ class ExamResultPage extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreCard(ExamResult result) {
+  Widget _buildScoreCard(
+    ExamResult result,
+    ThemeData theme,
+    BuildContext context,
+  ) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -94,15 +98,15 @@ class ExamResultPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: result.isPassing
-              ? [const Color(0xFF4CAF50), const Color(0xFF45a049)]
-              : [const Color(0xFFC85050), const Color(0xFF4D0005)],
+              ? [context.successColor, context.successColor.withOpacity(0.8)]
+              : [context.errorColor, context.errorColor.withOpacity(0.8)],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (result.isPassing ? Colors.green : Colors.red).withOpacity(
-              0.3,
-            ),
+            color:
+                (result.isPassing ? context.successColor : context.errorColor)
+                    .withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -156,51 +160,73 @@ class ExamResultPage extends StatelessWidget {
     );
   }
 
-  Widget _buildGradeSection(ExamResult result) {
+  Widget _buildGradeSection(
+    ExamResult result,
+    ThemeData theme,
+    BuildContext context,
+  ) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF4D0005).withOpacity(0.2),
+        color: context.surfaceColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.dividerColor),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildGradeItem('Grade', result.grade, Icons.star),
-          Container(width: 1, height: 40, color: Colors.white24),
+          _buildGradeItem(
+            'Grade',
+            result.grade,
+            Icons.star_rounded,
+            theme,
+            context,
+          ),
+          Container(width: 1, height: 40, color: context.dividerColor),
           _buildGradeItem(
             'Correct',
             '${result.correctCount}/${result.totalQuestions}',
-            Icons.check_circle,
+            Icons.check_circle_rounded,
+            theme,
+            context,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildGradeItem(String label, String value, IconData icon) {
+  Widget _buildGradeItem(
+    String label,
+    String value,
+    IconData icon,
+    ThemeData theme,
+    BuildContext context,
+  ) {
     return Column(
       children: [
-        Icon(icon, color: Colors.orangeAccent, size: 32),
+        Icon(icon, color: theme.colorScheme.secondary, size: 32),
         const SizedBox(height: 8),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 24,
+          style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(color: Colors.white54, fontSize: 14),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: context.textSecondary,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildStatistics(ExamResult result) {
+  Widget _buildStatistics(
+    ExamResult result,
+    ThemeData theme,
+    BuildContext context,
+  ) {
     final incorrectCount = result.totalQuestions - result.correctCount;
     final accuracy = result.totalQuestions > 0
         ? (result.correctCount / result.totalQuestions * 100)
@@ -209,13 +235,11 @@ class ExamResultPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 12),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
             'Statistics',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -223,37 +247,45 @@ class ExamResultPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF4D0005).withOpacity(0.2),
+            color: context.surfaceColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: context.dividerColor),
           ),
           child: Column(
             children: [
               _buildStatRow(
                 'Total Questions',
                 result.totalQuestions.toString(),
-                Icons.quiz,
+                Icons.quiz_rounded,
+                theme,
+                context,
               ),
-              const Divider(color: Colors.white12, height: 24),
+              Divider(color: context.dividerColor, height: 24),
               _buildStatRow(
                 'Correct Answers',
                 result.correctCount.toString(),
-                Icons.check_circle_outline,
-                color: Colors.green,
+                Icons.check_circle_outline_rounded,
+                theme,
+                context,
+                color: context.successColor,
               ),
-              const Divider(color: Colors.white12, height: 24),
+              Divider(color: context.dividerColor, height: 24),
               _buildStatRow(
                 'Incorrect Answers',
                 incorrectCount.toString(),
                 Icons.cancel_outlined,
-                color: Colors.red,
+                theme,
+                context,
+                color: context.errorColor,
               ),
-              const Divider(color: Colors.white12, height: 24),
+              Divider(color: context.dividerColor, height: 24),
               _buildStatRow(
                 'Accuracy',
                 '${accuracy.toStringAsFixed(1)}%',
-                Icons.percent,
-                color: Colors.orangeAccent,
+                Icons.percent_rounded,
+                theme,
+                context,
+                color: theme.colorScheme.secondary,
               ),
             ],
           ),
@@ -265,24 +297,27 @@ class ExamResultPage extends StatelessWidget {
   Widget _buildStatRow(
     String label,
     String value,
-    IconData icon, {
+    IconData icon,
+    ThemeData theme,
+    BuildContext context, {
     Color? color,
   }) {
     return Row(
       children: [
-        Icon(icon, color: color ?? Colors.white54, size: 20),
+        Icon(icon, color: color ?? context.textSecondary, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
         ),
         Text(
           value,
-          style: TextStyle(
-            color: color ?? Colors.white,
-            fontSize: 16,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: color ?? context.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -290,17 +325,19 @@ class ExamResultPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailedResults(ExamResult result) {
+  Widget _buildDetailedResults(
+    ExamResult result,
+    ThemeData theme,
+    BuildContext context,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 12),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
             'Question Details',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -308,23 +345,28 @@ class ExamResultPage extends StatelessWidget {
         ...result.details.asMap().entries.map((entry) {
           final index = entry.key;
           final detail = entry.value;
-          return _buildQuestionDetail(index + 1, detail);
-        }).toList(),
+          return _buildQuestionDetail(index + 1, detail, theme, context);
+        }),
       ],
     );
   }
 
-  Widget _buildQuestionDetail(int questionNumber, QuestionResult detail) {
+  Widget _buildQuestionDetail(
+    int questionNumber,
+    QuestionResult detail,
+    ThemeData theme,
+    BuildContext context,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: detail.isCorrect
-            ? Colors.green.withOpacity(0.1)
-            : Colors.red.withOpacity(0.1),
+            ? context.successColor.withOpacity(0.1)
+            : context.errorColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: detail.isCorrect ? Colors.green : Colors.red,
+          color: detail.isCorrect ? context.successColor : context.errorColor,
           width: 1,
         ),
       ),
@@ -334,7 +376,9 @@ class ExamResultPage extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: detail.isCorrect ? Colors.green : Colors.red,
+              color: detail.isCorrect
+                  ? context.successColor
+                  : context.errorColor,
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -355,15 +399,21 @@ class ExamResultPage extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      detail.isCorrect ? Icons.check_circle : Icons.cancel,
-                      color: detail.isCorrect ? Colors.green : Colors.red,
+                      detail.isCorrect
+                          ? Icons.check_circle_rounded
+                          : Icons.cancel_rounded,
+                      color: detail.isCorrect
+                          ? context.successColor
+                          : context.errorColor,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       detail.isCorrect ? 'Correct' : 'Incorrect',
                       style: TextStyle(
-                        color: detail.isCorrect ? Colors.green : Colors.red,
+                        color: detail.isCorrect
+                            ? context.successColor
+                            : context.errorColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -374,12 +424,14 @@ class ExamResultPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Your answer: ${detail.userAnswer ?? "Not answered"}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: context.textSecondary,
+                    ),
                   ),
                   Text(
                     'Correct answer: ${detail.correctAnswer}',
-                    style: const TextStyle(
-                      color: Colors.green,
+                    style: TextStyle(
+                      color: context.successColor,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -393,7 +445,7 @@ class ExamResultPage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, ThemeData theme) {
     return Column(
       children: [
         SizedBox(
@@ -405,13 +457,11 @@ class ExamResultPage extends StatelessWidget {
               Navigator.popUntil(context, (route) => route.isFirst);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFC85050),
-              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
             ),
-            icon: const Icon(Icons.home),
+            icon: const Icon(Icons.home_rounded),
             label: const Text(
               'Back to Home',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -428,13 +478,12 @@ class ExamResultPage extends StatelessWidget {
               Navigator.pop(context);
             },
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Colors.white54),
+              side: BorderSide(color: context.dividerColor),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
             ),
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_rounded),
             label: const Text('Back to Course', style: TextStyle(fontSize: 16)),
           ),
         ),

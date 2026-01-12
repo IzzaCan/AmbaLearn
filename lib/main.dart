@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'config/theme_config.dart';
 import 'pages/homepage.dart';
 import 'pages/courses.dart';
 import 'pages/lessons.dart';
@@ -10,41 +11,51 @@ import 'providers/auth_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/course_provider.dart';
 import 'providers/exam_provider.dart';
-// import 'pages/exam_result_page.dart';
-// import 'package:capstone_layout/pages/exam_page.dart';
-// import 'package:capstone_layout/pages/exam_permission_page.dart';
+import 'providers/theme_provider.dart';
 
-void main() {
-  runApp(const AmbaLearn());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize theme provider
+  final themeProvider = ThemeProvider();
+  await themeProvider.init();
+
+  runApp(AmbaLearn(themeProvider: themeProvider));
 }
 
 class AmbaLearn extends StatelessWidget {
-  const AmbaLearn({super.key});
+  final ThemeProvider themeProvider;
+
+  const AmbaLearn({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
-    // We change ChangeNotifierProvider to MultiProvider to hold multiple states
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => CourseProvider()),
         ChangeNotifierProvider(create: (_) => ExamProvider()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: "AmbaLearn",
-        initialRoute: '/login',
-        routes: {
-          '/login': (context) => const LoginPage(),
-          '/register': (context) => const RegisterPage(),
-          '/home': (context) => const HomePage(),
-          '/user_settings': (context) => const UserSettingPage(),
-          '/courses': (context) => const CoursesPage(),
-          '/lessons': (context) => const LessonsPage(),
-          // '/exam_permission': (context) => const ExamPermissionPage(courseUid: 'courseUid', courseTitle: 'courseTitle',),
-          // '/exam': (context) => const ExamPage(courseUid: 'courseUid', courseTitle: 'courseTitle',),
-          // '/exam_result': (context) => const ExamResultPage(courseTitle: 'courseTitle',),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: "AmbaLearn",
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.materialThemeMode,
+            initialRoute: '/login',
+            routes: {
+              '/login': (context) => const LoginPage(),
+              '/register': (context) => const RegisterPage(),
+              '/home': (context) => const HomePage(),
+              '/user_settings': (context) => const UserSettingPage(),
+              '/courses': (context) => const CoursesPage(),
+              '/lessons': (context) => const LessonsPage(),
+            },
+          );
         },
       ),
     );

@@ -1,6 +1,6 @@
 class ApiConfig {
   /// Base URL
-  static const String baseUrl = 'http://45.156.85.205:8080';
+  static const String baseUrl = 'http://127.0.0.1:8080';
 
   /// Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);
@@ -32,8 +32,6 @@ class ApiConfig {
   static String getSession(String uid) => '/get_session/$uid';
 
   /// Google Auth Client
-  // static const String googleClientIdWeb =
-  //     '518875508230-melh43klsocgbte9qiluo8220koupgi9.apps.googleusercontent.com';
-  // static const String googleClientIdAndroid =
-  //     '518875508230-9did8037674mirbapr4bjs3l9gapt9a4.apps.googleusercontent.com';
+  static const String googleClientIdAndroid =
+      '916823130703-05gh5fr437sb3bstdarmf55udgvj6gcc.apps.googleusercontent.com';
 }

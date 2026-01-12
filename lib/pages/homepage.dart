@@ -12,35 +12,56 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChatProvider>().loadSessions(); // sidebar only
+      context.read<ChatProvider>().loadSessions();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final chat = context.watch<ChatProvider>();
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF252525),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4D0005),
-        title: const Text("AmbaLearn", style: TextStyle(color: Colors.white)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondary.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.school_rounded,
+                size: 20,
+                color: theme.colorScheme.secondary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text("AmbaLearn"),
+          ],
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.white),
-            tooltip: "New Chat",
-            onPressed: chat.startNewChat, // reset draft only
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: Icon(Icons.add_rounded, color: theme.colorScheme.primary),
+              tooltip: "New Chat",
+              onPressed: chat.startNewChat,
+            ),
           ),
         ],
       ),
       drawer: const AppDrawer(),
-
-      // ⬇️ Chat UI dipisah
       body: const ChatPage(),
     );
   }
