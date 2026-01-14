@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
-import '../config/theme_config.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:translator_plus/translator_plus.dart';
+import '../config/theme_config.dart';
+import '../providers/language_provider.dart';
 
 class ChatBubble extends StatelessWidget {
   final String message;
   final bool isUser;
   final String? time;
+  final bool skipTranslation;
 
   const ChatBubble({
     super.key,
     required this.message,
     required this.isUser,
     this.time,
+    this.skipTranslation = false,
   });
 
   String? _getYoutubeVideoId(String message) {
-    // Regex for both standard and short YouTube URLs
     RegExp regExp = RegExp(
       r"(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})",
       caseSensitive: false,
@@ -98,17 +102,28 @@ class ChatBubble extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      message,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isUser
-                            ? Colors.white
-                            : (isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary),
-                        height: 1.5,
+                    if (isUser || skipTranslation)
+                      Text(
+                        message,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isUser
+                              ? Colors.white
+                              : (isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary),
+                          height: 1.5,
+                        ),
+                      )
+                    else
+                      _TranslatedText(
+                        text: message,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                          height: 1.5,
+                        ),
                       ),
-                    ),
                     if (time != null) ...[
                       const SizedBox(height: 6),
                       Text(
@@ -131,6 +146,78 @@ class ChatBubble extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _TranslatedText extends StatefulWidget {
+  final String text;
+  final TextStyle? style;
+
+  const _TranslatedText({required this.text, this.style});
+
+  @override
+  State<_TranslatedText> createState() => _TranslatedTextState();
+}
+
+class _TranslatedTextState extends State<_TranslatedText> {
+  final _translator = GoogleTranslator();
+  String? _translatedText;
+  String? _targetLang;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(_TranslatedText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.text != oldWidget.text) {
+      _translatedText = null;
+      _translate();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final newLang = context.watch<LanguageProvider>().targetLanguage;
+
+    if (_targetLang != newLang) {
+      _targetLang = newLang;
+      // Force reset when language changes manually
+      _translatedText = null;
+      _translate();
+    } else if (_translatedText == null) {
+      _translate();
+    }
+  }
+
+  Future<void> _translate() async {
+    if (_targetLang == null) return;
+
+    // Slight delay to avoid rapid updates during scroll
+    // await Future.delayed(Duration(milliseconds: 100));
+
+    try {
+      final translation = await _translator.translate(
+        widget.text,
+        to: _targetLang!,
+      );
+
+      if (mounted) {
+        setState(() {
+          _translatedText = translation.text;
+        });
+      }
+    } catch (e) {
+      debugPrint("Translation error: $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(_translatedText ?? widget.text, style: widget.style);
   }
 }
 

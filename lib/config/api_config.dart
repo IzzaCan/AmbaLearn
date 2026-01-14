@@ -32,6 +32,6 @@ class ApiConfig {
   static String getSession(String uid) => '/get_session/$uid';
 
   /// Google Auth Client
-  static const String googleClientIdAndroid =
-      '916823130703-05gh5fr437sb3bstdarmf55udgvj6gcc.apps.googleusercontent.com';
+  static const String googleClientIdWeb =
+      '762516784766-e1jiaep2bnstnhqcffvi3jqno8updlco.apps.googleusercontent.com';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/chat_provider.dart';
+import '../providers/language_provider.dart';
 import '../widgets/app_drawer.dart';
 import 'chat_page.dart';
 
@@ -43,7 +44,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(width: 10),
-            const Text("AmbaLearn"),
+            Text(context.watch<LanguageProvider>().getText('app_name')),
           ],
         ),
         actions: [
@@ -55,7 +56,7 @@ class _HomePageState extends State<HomePage> {
             ),
             child: IconButton(
               icon: Icon(Icons.add_rounded, color: theme.colorScheme.primary),
-              tooltip: "New Chat",
+              tooltip: context.watch<LanguageProvider>().getText('new_chat'),
               onPressed: chat.startNewChat,
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../providers/auth_provider.dart';
+import '../providers/language_provider.dart';
 import 'loginpage.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -124,14 +125,14 @@ class _RegisterPageState extends State<RegisterPage>
         ),
         const SizedBox(height: 24),
         Text(
-          "Create Account",
+          context.watch<LanguageProvider>().getText('create_account'),
           style: theme.textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          "Start your learning journey today",
+          context.watch<LanguageProvider>().getText('sign_up_started'),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: context.textSecondary,
           ),
@@ -177,8 +178,12 @@ class _RegisterPageState extends State<RegisterPage>
                       Icons.person_outline,
                       color: context.textSecondary,
                     ),
-                    labelText: "Username",
-                    hintText: "Choose a username",
+                    labelText: context.watch<LanguageProvider>().getText(
+                      'username',
+                    ),
+                    hintText: context.watch<LanguageProvider>().getText(
+                      'enter_username',
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -192,8 +197,12 @@ class _RegisterPageState extends State<RegisterPage>
                       Icons.email_outlined,
                       color: context.textSecondary,
                     ),
-                    labelText: "Email",
-                    hintText: "Enter your email",
+                    labelText: context.watch<LanguageProvider>().getText(
+                      'email',
+                    ),
+                    hintText: context.watch<LanguageProvider>().getText(
+                      'enter_email',
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -207,8 +216,12 @@ class _RegisterPageState extends State<RegisterPage>
                       Icons.lock_outline,
                       color: context.textSecondary,
                     ),
-                    labelText: "Password",
-                    hintText: "Create a password",
+                    labelText: context.watch<LanguageProvider>().getText(
+                      'password',
+                    ),
+                    hintText: context.watch<LanguageProvider>().getText(
+                      'enter_password',
+                    ),
                     suffixIcon: IconButton(
                       onPressed: () => setState(() => obscure = !obscure),
                       icon: Icon(
@@ -266,7 +279,11 @@ class _RegisterPageState extends State<RegisterPage>
                               color: theme.colorScheme.onSecondary,
                             ),
                           )
-                        : const Text("Create Account"),
+                        : Text(
+                            context.watch<LanguageProvider>().getText(
+                              'create_account',
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -276,7 +293,7 @@ class _RegisterPageState extends State<RegisterPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Already have an account? ",
+                      "${context.watch<LanguageProvider>().getText('already_account')} ",
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: context.textSecondary,
                       ),
@@ -287,7 +304,7 @@ class _RegisterPageState extends State<RegisterPage>
                         MaterialPageRoute(builder: (_) => const LoginPage()),
                       ),
                       child: Text(
-                        "Sign In",
+                        context.watch<LanguageProvider>().getText('sign_in'),
                         style: TextStyle(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,

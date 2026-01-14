@@ -12,27 +12,38 @@ import 'providers/chat_provider.dart';
 import 'providers/course_provider.dart';
 import 'providers/exam_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/language_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize theme provider
   final themeProvider = ThemeProvider();
   await themeProvider.init();
 
-  runApp(AmbaLearn(themeProvider: themeProvider));
+  final languageProvider = LanguageProvider();
+  await languageProvider.init();
+
+  runApp(
+    AmbaLearn(themeProvider: themeProvider, languageProvider: languageProvider),
+  );
 }
 
 class AmbaLearn extends StatelessWidget {
   final ThemeProvider themeProvider;
+  final LanguageProvider languageProvider;
 
-  const AmbaLearn({super.key, required this.themeProvider});
+  const AmbaLearn({
+    super.key,
+    required this.themeProvider,
+    required this.languageProvider,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: themeProvider),
+        ChangeNotifierProvider.value(value: languageProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => CourseProvider()),

@@ -45,6 +45,7 @@ dependencies:
   google_fonts: ^6.1.0
   speech_to_text: ^7.0.0
   youtube_player_flutter: ^9.0.1
+  translator_plus: any
 
 dev_dependencies:
   flutter_test:
