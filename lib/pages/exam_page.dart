@@ -60,7 +60,7 @@ class _ExamPageState extends State<ExamPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_liveStatus.isEmpty) {
-      _liveStatus = AppLocalizations.of(context)!.initializing;
+        _liveStatus = AppLocalizations.of(context)!.initializing;
     }
   }
 
@@ -68,13 +68,13 @@ class _ExamPageState extends State<ExamPage> {
     // Singleton instance automatically retrieved
     _antiCheatService.init(); // Checks internal flag
     _antiCheatService.connect(); // Checks connected status
-
+    
     _alertSub = _antiCheatService.cheatingAlertStream.listen((data) {
       if (!mounted) return;
       final detail = data['detail'];
       final count = data['count'];
       final max = data['max'];
-
+      
       setState(() {
         _showWarning = true;
         _warningMessage = detail;
@@ -92,33 +92,30 @@ class _ExamPageState extends State<ExamPage> {
 
     _autoSubmitSub = _antiCheatService.autoSubmitStream.listen((detail) {
       if (!mounted) return;
-      _showErrorDialog(
-        '⛔ VIOLATION LIMIT EXCEEDED.\nYour exam is being automatically submitted.',
-      );
+      _showErrorDialog('⛔ VIOLATION LIMIT EXCEEDED.\nYour exam is being automatically submitted.');
       _submitExam(autoSubmit: true);
     });
 
     _statusSub = _antiCheatService.statusStream.listen((status) {
-      if (!mounted) return;
-      final msg = status['status'] as String? ?? "Normal";
-      final numFaces = status['num_faces'] as int? ?? 0;
-
-      String display = AppLocalizations.of(context)!.monitoringActive;
-      Color color = Colors.green;
-
-      if (numFaces == 0) {
-        display = AppLocalizations.of(context)!.faceNotDetected;
-        color = Colors.orange;
-      } else if (msg != "Normal") {
-        display =
-            msg; // Messages from server might essentially be 'Multiple Faces', etc. difficult to localize without mapping
-        color = Colors.red;
-      }
-
-      setState(() {
-        _liveStatus = display;
-        _liveStatusColor = color;
-      });
+       if (!mounted) return;
+       final msg = status['status'] as String? ?? "Normal";
+       final numFaces = status['num_faces'] as int? ?? 0;
+       
+       String display = AppLocalizations.of(context)!.monitoringActive;
+       Color color = Colors.green;
+       
+       if (numFaces == 0) {
+         display = AppLocalizations.of(context)!.faceNotDetected;
+         color = Colors.orange;
+       } else if (msg != "Normal") {
+         display = msg; // Messages from server might essentially be 'Multiple Faces', etc. difficult to localize without mapping
+         color = Colors.red;
+       }
+       
+       setState(() {
+         _liveStatus = display;
+         _liveStatusColor = color;
+       });
     });
   }
 
@@ -129,10 +126,7 @@ class _ExamPageState extends State<ExamPage> {
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surfaceColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Exam Terminated',
-          style: TextStyle(color: Colors.red),
-        ), // This seems critical, maybe keep English or localize if added keys
+        title: const Text('Exam Terminated', style: TextStyle(color: Colors.red)), // This seems critical, maybe keep English or localize if added keys
         content: Text(message),
         actions: [
           ElevatedButton(
@@ -149,7 +143,7 @@ class _ExamPageState extends State<ExamPage> {
   void dispose() {
     _cameraController?.stopImageStream();
     _cameraController?.dispose();
-
+    
     _statusSub?.cancel();
     _alertSub?.cancel();
     _autoSubmitSub?.cancel();
@@ -193,7 +187,7 @@ class _ExamPageState extends State<ExamPage> {
       );
 
       await _cameraController!.initialize();
-
+      
       if (mounted) {
         setState(() => _isCameraInitialized = true);
         debugPrint(AppLocalizations.of(context)!.cameraInitialized);
@@ -214,10 +208,7 @@ class _ExamPageState extends State<ExamPage> {
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surfaceColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          AppLocalizations.of(context)!.error,
-          style: theme.textTheme.titleLarge,
-        ),
+        title: Text(AppLocalizations.of(context)!.error, style: theme.textTheme.titleLarge),
         content: Text(message, style: theme.textTheme.bodyMedium),
         actions: [
           ElevatedButton(
@@ -243,20 +234,12 @@ class _ExamPageState extends State<ExamPage> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: context.surfaceColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            AppLocalizations.of(context)!.submitExamQuestion,
-            style: theme.textTheme.titleLarge,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(AppLocalizations.of(context)!.submitExamQuestion, style: theme.textTheme.titleLarge),
           content: Text(
             provider.isAllAnswered
                 ? AppLocalizations.of(context)!.submitExamConfirmAll
-                : AppLocalizations.of(context)!.submitExamConfirmPartial(
-                    provider.answeredCount,
-                    provider.totalQuestions,
-                  ),
+                : AppLocalizations.of(context)!.submitExamConfirmPartial(provider.answeredCount, provider.totalQuestions),
             style: theme.textTheme.bodyMedium,
           ),
           actions: [
@@ -298,9 +281,7 @@ class _ExamPageState extends State<ExamPage> {
       if (!autoSubmit) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              provider.error ?? AppLocalizations.of(context)!.failedToSubmit,
-            ),
+            content: Text(provider.error ?? AppLocalizations.of(context)!.failedToSubmit),
             backgroundColor: context.errorColor,
           ),
         );
@@ -322,10 +303,7 @@ class _ExamPageState extends State<ExamPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            title: Text(
-              AppLocalizations.of(context)!.exitExam,
-              style: theme.textTheme.titleLarge,
-            ),
+            title: Text(AppLocalizations.of(context)!.exitExam, style: theme.textTheme.titleLarge),
             content: Text(
               AppLocalizations.of(context)!.exitExamConfirm,
               style: theme.textTheme.bodyMedium,
@@ -434,30 +412,27 @@ class _ExamPageState extends State<ExamPage> {
               automaticallyImplyLeading: false,
               actions: [
                 // Camera preview indicator
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: Center(
-                    child: Text(
-                      _violationCount > 0
-                          ? AppLocalizations.of(
-                              context,
-                            )!.violationStatus(_violationCount, _maxViolations)
-                          : '',
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Center(
+                      child: Text(
+                        _violationCount > 0 ? AppLocalizations.of(context)!.violationStatus(_violationCount, _maxViolations) : '',
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
-                ),
+
               ],
             ),
             body: Column(
               children: [
                 // Progress bar
                 _buildProgressBar(provider, theme),
-
+      
                 // Question area
                 Expanded(
                   child: SingleChildScrollView(
@@ -475,13 +450,13 @@ class _ExamPageState extends State<ExamPage> {
                     ),
                   ),
                 ),
-
+      
                 // Navigation buttons
                 _buildNavigationButtons(provider, theme),
               ],
             ),
           ),
-
+          
           // WARNING OVERLAY
           if (_showWarning)
             Positioned(
@@ -511,11 +486,7 @@ class _ExamPageState extends State<ExamPage> {
                   ),
                   child: Column(
                     children: [
-                      const Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.white,
-                        size: 40,
-                      ),
+                      const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 40),
                       const SizedBox(height: 10),
                       Text(
                         AppLocalizations.of(context)!.cheatingDetected,
@@ -528,13 +499,8 @@ class _ExamPageState extends State<ExamPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        AppLocalizations.of(
-                          context,
-                        )!.keepEyesOnScreen(_warningMessage),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
+                        AppLocalizations.of(context)!.keepEyesOnScreen(_warningMessage),
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -542,7 +508,7 @@ class _ExamPageState extends State<ExamPage> {
                 ),
               ),
             ),
-
+          
           // PIP CAMERA
           if (_isCameraInitialized && _cameraController != null)
             Positioned(
@@ -574,14 +540,14 @@ class _ExamPageState extends State<ExamPage> {
                             child: Text(
                               _liveStatus,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: Colors.white, 
                                 fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.bold
                               ),
                               textAlign: TextAlign.center,
                             ),
                           ),
-                        ),
+                        )
                       ],
                     ),
                   ),
@@ -603,19 +569,13 @@ class _ExamPageState extends State<ExamPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                AppLocalizations.of(context)!.questionTitle(
-                  provider.currentQuestionIndex + 1,
-                  provider.totalQuestions,
-                ),
+                AppLocalizations.of(context)!.questionTitle(provider.currentQuestionIndex + 1, provider.totalQuestions),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
-                AppLocalizations.of(context)!.answeredStatus(
-                  provider.answeredCount,
-                  provider.totalQuestions,
-                ),
+                AppLocalizations.of(context)!.answeredStatus(provider.answeredCount, provider.totalQuestions),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: context.textSecondary,
                 ),
@@ -643,9 +603,7 @@ class _ExamPageState extends State<ExamPage> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        AppLocalizations.of(
-          context,
-        )!.questionHeader(provider.currentQuestionIndex + 1),
+        AppLocalizations.of(context)!.questionHeader(provider.currentQuestionIndex + 1),
         style: TextStyle(
           color: context.isDarkMode ? AppColors.darkBackground : Colors.white,
           fontWeight: FontWeight.bold,
@@ -787,9 +745,7 @@ class _ExamPageState extends State<ExamPage> {
             child: ElevatedButton.icon(
               onPressed: provider.isSubmitting
                   ? null
-                  : (isLastQuestion
-                        ? () => _submitExam()
-                        : provider.nextQuestion),
+                  : (isLastQuestion ? () => _submitExam() : provider.nextQuestion),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -811,9 +767,7 @@ class _ExamPageState extends State<ExamPage> {
               label: Text(
                 provider.isSubmitting
                     ? AppLocalizations.of(context)!.submitting
-                    : (isLastQuestion
-                          ? AppLocalizations.of(context)!.submitExam
-                          : AppLocalizations.of(context)!.next),
+                    : (isLastQuestion ? AppLocalizations.of(context)!.submitExam : AppLocalizations.of(context)!.next),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -822,12 +776,10 @@ class _ExamPageState extends State<ExamPage> {
       ),
     );
   }
-
   void _processCameraImage(CameraImage image) async {
     // Throttle: Process 1 frame every 500ms
     final now = DateTime.now();
-    if (_isProcessingFrame ||
-        now.difference(_lastFrameTime).inMilliseconds < 500) {
+    if (_isProcessingFrame || now.difference(_lastFrameTime).inMilliseconds < 500) {
       return;
     }
 
@@ -836,36 +788,32 @@ class _ExamPageState extends State<ExamPage> {
 
     try {
       img.Image? processedImage;
-
+      
       if (image.format.group == ImageFormatGroup.yuv420) {
         // Handle YUV420 strided (Robust implementation)
         final int width = image.width;
         final int height = image.height;
-
-        processedImage = img.Image(
-          width: width,
-          height: height,
-          numChannels: 1,
-        );
-
+        
+        processedImage = img.Image(width: width, height: height, numChannels: 1);
+        
         final yPlane = image.planes[0];
         final yStride = yPlane.bytesPerRow;
         final yBytes = yPlane.bytes;
-
+        
         for (int y = 0; y < height; y++) {
           for (int x = 0; x < width; x++) {
-            final index = y * yStride + x;
-            if (index < yBytes.length) {
-              processedImage.setPixelR(x, y, yBytes[index]);
-            }
+             final index = y * yStride + x;
+             if (index < yBytes.length) {
+               processedImage.setPixelR(x, y, yBytes[index]);
+             }
           }
         }
       } else if (image.format.group == ImageFormatGroup.bgra8888) {
         processedImage = img.Image.fromBytes(
-          width: image.width,
-          height: image.height,
-          bytes: image.planes[0].bytes.buffer,
-          order: img.ChannelOrder.bgra,
+            width: image.width,
+            height: image.height,
+            bytes: image.planes[0].bytes.buffer,
+            order: img.ChannelOrder.bgra,
         );
       }
 
@@ -877,7 +825,7 @@ class _ExamPageState extends State<ExamPage> {
         final resized = img.copyResize(processedImage, width: 320);
         final jpg = img.encodeJpg(resized, quality: 70);
         final base64String = base64Encode(jpg);
-
+        
         _antiCheatService.sendFrame(base64String);
       }
     } catch (e) {
@@ -888,4 +836,6 @@ class _ExamPageState extends State<ExamPage> {
       }
     }
   }
+
+
 }
