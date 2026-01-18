@@ -120,7 +120,6 @@ class _ChatPageState extends State<ChatPage> {
                           'thinking',
                         ),
                         isUser: false,
-                        skipTranslation: true,
                       );
                     }
                     final msg = chat.messages[index];
