@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'config/theme_config.dart';
 import 'pages/homepage.dart';
 import 'pages/courses.dart';
@@ -57,6 +59,20 @@ class AmbaLearn extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.materialThemeMode,
+            
+            // Localization
+            locale: Provider.of<LanguageProvider>(context).locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('id'),
+            ],
+
             initialRoute: '/login',
             routes: {
               '/login': (context) => const LoginPage(),

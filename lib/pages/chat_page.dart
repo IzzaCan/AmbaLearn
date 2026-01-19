@@ -6,7 +6,8 @@ import '../providers/auth_provider.dart';
 import '../widgets/chat_bubble.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
-import '../providers/language_provider.dart';
+
+import '../l10n/app_localizations.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -116,11 +117,8 @@ class _ChatPageState extends State<ChatPage> {
                   itemBuilder: (context, index) {
                     if (index == chat.messages.length) {
                       return ChatBubble(
-                        message: context.watch<LanguageProvider>().getText(
-                          'thinking',
-                        ),
+                        message: AppLocalizations.of(context)!.thinking,
                         isUser: false,
-                        skipTranslation: true,
                       );
                     }
                     final msg = chat.messages[index];
@@ -165,13 +163,13 @@ class _ChatPageState extends State<ChatPage> {
             ),
             const SizedBox(height: 24),
             Text(
-              "${context.watch<LanguageProvider>().getText('welcome_back')} $username! 👋",
+              "${AppLocalizations.of(context)!.welcomeBack} $username! 👋",
               style: theme.textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              "Mau belajar apa hari ini?",
+              AppLocalizations.of(context)!.whatToLearn,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: context.textSecondary,
               ),
@@ -184,9 +182,9 @@ class _ChatPageState extends State<ChatPage> {
               runSpacing: 8,
               alignment: WrapAlignment.center,
               children: [
-                _buildSuggestionChip("Python Basics", theme),
-                _buildSuggestionChip("Machine Learning", theme),
-                _buildSuggestionChip("Web Development", theme),
+                _buildSuggestionChip(AppLocalizations.of(context)!.topicPython, theme),
+                _buildSuggestionChip(AppLocalizations.of(context)!.topicML, theme),
+                _buildSuggestionChip(AppLocalizations.of(context)!.topicWeb, theme),
               ],
             ),
           ],
@@ -205,7 +203,7 @@ class _ChatPageState extends State<ChatPage> {
         color: theme.colorScheme.primary,
       ),
       onPressed: () {
-        _messageController.text = "Ajarkan saya tentang $text";
+        _messageController.text = AppLocalizations.of(context)!.teachMeAbout(text);
         _sendMessage(chat);
       },
     );
@@ -244,9 +242,7 @@ class _ChatPageState extends State<ChatPage> {
                   onSubmitted: (_) => _sendMessage(chat),
                   style: theme.textTheme.bodyMedium,
                   decoration: InputDecoration(
-                    hintText: context.watch<LanguageProvider>().getText(
-                      'type_message',
-                    ),
+                    hintText: AppLocalizations.of(context)!.typeMessage,
                     hintStyle: theme.textTheme.bodyMedium?.copyWith(
                       color: context.textSecondary,
                     ),
@@ -279,7 +275,7 @@ class _ChatPageState extends State<ChatPage> {
                       ? Colors.redAccent
                       : theme.colorScheme.primary,
                 ),
-                tooltip: "Voice input",
+                tooltip: AppLocalizations.of(context)!.voiceInput,
               ),
             ),
             const SizedBox(width: 8),
@@ -315,7 +311,7 @@ class _ChatPageState extends State<ChatPage> {
                         ),
                       )
                     : const Icon(Icons.send_rounded, color: Colors.white),
-                tooltip: "Send message",
+                tooltip: AppLocalizations.of(context)!.sendMessage,
               ),
             ),
           ],

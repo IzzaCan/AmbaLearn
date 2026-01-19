@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../providers/exam_provider.dart';
 import '../models/exam_model.dart';
+import '../l10n/app_localizations.dart';
 
 /// ExamResultPage - Display exam results
 /// Matches the web version's score.html pattern
@@ -32,9 +33,9 @@ class ExamResultPage extends StatelessWidget {
 
           return Scaffold(
             appBar: AppBar(
-              title: const Text(
-                'Exam Results',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              title: Text(
+                AppLocalizations.of(context)!.examResults,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               centerTitle: true,
               automaticallyImplyLeading: false,
@@ -74,11 +75,11 @@ class ExamResultPage extends StatelessWidget {
               color: context.errorColor,
             ),
             const SizedBox(height: 24),
-            Text('No exam results found', style: theme.textTheme.bodyLarge),
+            Text(AppLocalizations.of(context)!.noExamResults, style: theme.textTheme.bodyLarge),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Go Back'),
+              child: Text(AppLocalizations.of(context)!.goBack),
             ),
           ],
         ),
@@ -124,9 +125,9 @@ class ExamResultPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Your Score',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+          Text(
+            AppLocalizations.of(context)!.yourScore,
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
@@ -146,7 +147,7 @@ class ExamResultPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              result.isPassing ? 'PASSED' : 'FAILED',
+              result.isPassing ? AppLocalizations.of(context)!.passed : AppLocalizations.of(context)!.failed,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -176,7 +177,7 @@ class ExamResultPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildGradeItem(
-            'Grade',
+            AppLocalizations.of(context)!.grade,
             result.grade,
             Icons.star_rounded,
             theme,
@@ -184,7 +185,7 @@ class ExamResultPage extends StatelessWidget {
           ),
           Container(width: 1, height: 40, color: context.dividerColor),
           _buildGradeItem(
-            'Correct',
+            AppLocalizations.of(context)!.correct,
             '${result.correctCount}/${result.totalQuestions}',
             Icons.check_circle_rounded,
             theme,
@@ -238,7 +239,7 @@ class ExamResultPage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
-            'Statistics',
+            AppLocalizations.of(context)!.statistics,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -254,7 +255,7 @@ class ExamResultPage extends StatelessWidget {
           child: Column(
             children: [
               _buildStatRow(
-                'Total Questions',
+                AppLocalizations.of(context)!.totalQuestions,
                 result.totalQuestions.toString(),
                 Icons.quiz_rounded,
                 theme,
@@ -262,7 +263,7 @@ class ExamResultPage extends StatelessWidget {
               ),
               Divider(color: context.dividerColor, height: 24),
               _buildStatRow(
-                'Correct Answers',
+                AppLocalizations.of(context)!.correctAnswers,
                 result.correctCount.toString(),
                 Icons.check_circle_outline_rounded,
                 theme,
@@ -271,7 +272,7 @@ class ExamResultPage extends StatelessWidget {
               ),
               Divider(color: context.dividerColor, height: 24),
               _buildStatRow(
-                'Incorrect Answers',
+                AppLocalizations.of(context)!.incorrectAnswers,
                 incorrectCount.toString(),
                 Icons.cancel_outlined,
                 theme,
@@ -280,7 +281,7 @@ class ExamResultPage extends StatelessWidget {
               ),
               Divider(color: context.dividerColor, height: 24),
               _buildStatRow(
-                'Accuracy',
+                AppLocalizations.of(context)!.accuracy,
                 '${accuracy.toStringAsFixed(1)}%',
                 Icons.percent_rounded,
                 theme,
@@ -336,7 +337,7 @@ class ExamResultPage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
-            'Question Details',
+            AppLocalizations.of(context)!.questionDetails,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -409,7 +410,7 @@ class ExamResultPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      detail.isCorrect ? 'Correct' : 'Incorrect',
+                      detail.isCorrect ? AppLocalizations.of(context)!.correctStatus : AppLocalizations.of(context)!.incorrectStatus,
                       style: TextStyle(
                         color: detail.isCorrect
                             ? context.successColor
@@ -423,13 +424,13 @@ class ExamResultPage extends StatelessWidget {
                 if (!detail.isCorrect) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'Your answer: ${detail.userAnswer ?? "Not answered"}',
+                    AppLocalizations.of(context)!.yourAnswer(detail.userAnswer ?? AppLocalizations.of(context)!.notAnswered),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: context.textSecondary,
                     ),
                   ),
                   Text(
-                    'Correct answer: ${detail.correctAnswer}',
+                    AppLocalizations.of(context)!.correctAnswer(detail.correctAnswer),
                     style: TextStyle(
                       color: context.successColor,
                       fontSize: 13,
@@ -462,9 +463,9 @@ class ExamResultPage extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.home_rounded),
-            label: const Text(
-              'Back to Home',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            label: Text(
+              AppLocalizations.of(context)!.backToHome,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -484,7 +485,7 @@ class ExamResultPage extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.arrow_back_rounded),
-            label: const Text('Back to Course', style: TextStyle(fontSize: 16)),
+            label: Text(AppLocalizations.of(context)!.backToCourse, style: const TextStyle(fontSize: 16)),
           ),
         ),
       ],

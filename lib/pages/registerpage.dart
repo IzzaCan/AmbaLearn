@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../providers/auth_provider.dart';
-import '../providers/language_provider.dart';
+
 import 'loginpage.dart';
+import '../l10n/app_localizations.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -125,14 +126,14 @@ class _RegisterPageState extends State<RegisterPage>
         ),
         const SizedBox(height: 24),
         Text(
-          context.watch<LanguageProvider>().getText('create_account'),
+          AppLocalizations.of(context)!.createAccount,
           style: theme.textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          context.watch<LanguageProvider>().getText('sign_up_started'),
+          AppLocalizations.of(context)!.signUpStarted,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: context.textSecondary,
           ),
@@ -178,12 +179,8 @@ class _RegisterPageState extends State<RegisterPage>
                       Icons.person_outline,
                       color: context.textSecondary,
                     ),
-                    labelText: context.watch<LanguageProvider>().getText(
-                      'username',
-                    ),
-                    hintText: context.watch<LanguageProvider>().getText(
-                      'enter_username',
-                    ),
+                    labelText: AppLocalizations.of(context)!.username,
+                    hintText: AppLocalizations.of(context)!.enterUsername,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -197,12 +194,8 @@ class _RegisterPageState extends State<RegisterPage>
                       Icons.email_outlined,
                       color: context.textSecondary,
                     ),
-                    labelText: context.watch<LanguageProvider>().getText(
-                      'email',
-                    ),
-                    hintText: context.watch<LanguageProvider>().getText(
-                      'enter_email',
-                    ),
+                    labelText: AppLocalizations.of(context)!.email,
+                    hintText: AppLocalizations.of(context)!.enterEmail,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -216,12 +209,8 @@ class _RegisterPageState extends State<RegisterPage>
                       Icons.lock_outline,
                       color: context.textSecondary,
                     ),
-                    labelText: context.watch<LanguageProvider>().getText(
-                      'password',
-                    ),
-                    hintText: context.watch<LanguageProvider>().getText(
-                      'enter_password',
-                    ),
+                    labelText: AppLocalizations.of(context)!.password,
+                    hintText: AppLocalizations.of(context)!.enterPassword,
                     suffixIcon: IconButton(
                       onPressed: () => setState(() => obscure = !obscure),
                       icon: Icon(
@@ -279,11 +268,7 @@ class _RegisterPageState extends State<RegisterPage>
                               color: theme.colorScheme.onSecondary,
                             ),
                           )
-                        : Text(
-                            context.watch<LanguageProvider>().getText(
-                              'create_account',
-                            ),
-                          ),
+                        : Text(AppLocalizations.of(context)!.createAccount),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -293,7 +278,7 @@ class _RegisterPageState extends State<RegisterPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "${context.watch<LanguageProvider>().getText('already_account')} ",
+                      "${AppLocalizations.of(context)!.alreadyAccount} ",
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: context.textSecondary,
                       ),
@@ -304,7 +289,7 @@ class _RegisterPageState extends State<RegisterPage>
                         MaterialPageRoute(builder: (_) => const LoginPage()),
                       ),
                       child: Text(
-                        context.watch<LanguageProvider>().getText('sign_in'),
+                        AppLocalizations.of(context)!.signIn,
                         style: TextStyle(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,

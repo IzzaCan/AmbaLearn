@@ -62,9 +62,7 @@ class ApiService {
   Future<User?> loginWithGoogle() async {
     try {
       final googleSignIn = GoogleSignIn(
-        clientId: kIsWeb
-            ? ApiConfig.googleClientIdWeb
-            : ApiConfig.googleClientIdAndroid,
+        clientId: ApiConfig.googleClientIdWeb,
         scopes: ['email', 'profile'],
       );
 
@@ -84,8 +82,6 @@ class ApiService {
       return null;
     } catch (e, st) {
       log("Google Login Error: $e\n$st");
-      print("GOOGLE SIGN IN ERROR: $e");
-      print("WEB CLIENT ID = ${ApiConfig.googleClientIdWeb}");
       return null;
     }
   }

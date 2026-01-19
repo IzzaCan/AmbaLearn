@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../providers/auth_provider.dart';
-import '../providers/language_provider.dart';
+
 import 'homepage.dart';
 import 'registerpage.dart';
+import '../l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -124,7 +125,7 @@ class _LoginPageState extends State<LoginPage>
         ),
         const SizedBox(height: 24),
         Text(
-          context.watch<LanguageProvider>().getText('app_name'),
+          AppLocalizations.of(context)!.appName,
           style: theme.textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -171,13 +172,13 @@ class _LoginPageState extends State<LoginPage>
               children: [
                 // Title
                 Text(
-                  context.watch<LanguageProvider>().getText('welcome_back'),
+                  AppLocalizations.of(context)!.welcomeBack,
                   style: theme.textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  context.watch<LanguageProvider>().getText('sign_in_continue'),
+                  AppLocalizations.of(context)!.signInContinue,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: context.textSecondary,
                   ),
@@ -194,12 +195,8 @@ class _LoginPageState extends State<LoginPage>
                       Icons.email_outlined,
                       color: context.textSecondary,
                     ),
-                    labelText: context.watch<LanguageProvider>().getText(
-                      'email',
-                    ),
-                    hintText: context.watch<LanguageProvider>().getText(
-                      'enter_email',
-                    ),
+                    labelText: AppLocalizations.of(context)!.email,
+                    hintText: AppLocalizations.of(context)!.enterEmail,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -213,12 +210,8 @@ class _LoginPageState extends State<LoginPage>
                       Icons.lock_outline,
                       color: context.textSecondary,
                     ),
-                    labelText: context.watch<LanguageProvider>().getText(
-                      'password',
-                    ),
-                    hintText: context.watch<LanguageProvider>().getText(
-                      'enter_password',
-                    ),
+                    labelText: AppLocalizations.of(context)!.password,
+                    hintText: AppLocalizations.of(context)!.enterPassword,
                     suffixIcon: IconButton(
                       onPressed: () => setState(() => obscure = !obscure),
                       icon: Icon(
@@ -264,11 +257,7 @@ class _LoginPageState extends State<LoginPage>
                               color: theme.colorScheme.onPrimary,
                             ),
                           )
-                        : Text(
-                            context.watch<LanguageProvider>().getText(
-                              'sign_in',
-                            ),
-                          ),
+                        : Text(AppLocalizations.of(context)!.signIn),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -280,7 +269,7 @@ class _LoginPageState extends State<LoginPage>
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        context.watch<LanguageProvider>().getText('or'),
+                        AppLocalizations.of(context)!.or,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: context.textSecondary,
                         ),
@@ -325,9 +314,7 @@ class _LoginPageState extends State<LoginPage>
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                     label: Text(
-                      context.watch<LanguageProvider>().getText(
-                        'continue_google',
-                      ),
+                      AppLocalizations.of(context)!.continueGoogle,
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: context.textPrimary,
                       ),
@@ -341,7 +328,7 @@ class _LoginPageState extends State<LoginPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "${context.watch<LanguageProvider>().getText('no_account')} ",
+                      "${AppLocalizations.of(context)!.noAccount} ",
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: context.textSecondary,
                       ),
@@ -352,7 +339,7 @@ class _LoginPageState extends State<LoginPage>
                         MaterialPageRoute(builder: (_) => const RegisterPage()),
                       ),
                       child: Text(
-                        context.watch<LanguageProvider>().getText('sign_up'),
+                        AppLocalizations.of(context)!.signUp,
                         style: TextStyle(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,

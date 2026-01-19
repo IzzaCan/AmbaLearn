@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/chat_provider.dart';
-import '../providers/language_provider.dart';
+
 import '../widgets/app_drawer.dart';
 import 'chat_page.dart';
+import '../l10n/app_localizations.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,7 +24,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final chat = context.watch<ChatProvider>();
+
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -44,23 +45,9 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(width: 10),
-            Text(context.watch<LanguageProvider>().getText('app_name')),
+            Text(AppLocalizations.of(context)!.appName),
           ],
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: Icon(Icons.add_rounded, color: theme.colorScheme.primary),
-              tooltip: context.watch<LanguageProvider>().getText('new_chat'),
-              onPressed: chat.startNewChat,
-            ),
-          ),
-        ],
       ),
       drawer: const AppDrawer(),
       body: const ChatPage(),

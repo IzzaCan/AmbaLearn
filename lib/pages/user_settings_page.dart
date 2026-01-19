@@ -9,6 +9,7 @@ import '../providers/course_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/language_provider.dart';
 import 'loginpage.dart';
+import '../l10n/app_localizations.dart';
 
 class UserSettingPage extends StatelessWidget {
   const UserSettingPage({super.key});
@@ -24,7 +25,7 @@ class UserSettingPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.watch<LanguageProvider>().getText('settings')),
+        title: Text(AppLocalizations.of(context)!.settings),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
@@ -48,7 +49,7 @@ class UserSettingPage extends StatelessWidget {
             // Appearance Section
             _buildSectionTitle(
               context,
-              context.watch<LanguageProvider>().getText('appearance'),
+              AppLocalizations.of(context)!.appearance,
             ),
             const SizedBox(height: 12),
             _buildThemeSelector(context, theme, themeProvider),
@@ -58,7 +59,7 @@ class UserSettingPage extends StatelessWidget {
             // Account Section
             _buildSectionTitle(
               context,
-              context.watch<LanguageProvider>().getText('account'),
+              AppLocalizations.of(context)!.account,
             ),
             const SizedBox(height: 12),
             _buildAccountOptions(context, theme),
@@ -291,7 +292,7 @@ class UserSettingPage extends StatelessWidget {
             context: context,
             theme: theme,
             icon: Icons.notifications_outlined,
-            title: context.watch<LanguageProvider>().getText('notifications'),
+            title: AppLocalizations.of(context)!.notifications,
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -304,7 +305,7 @@ class UserSettingPage extends StatelessWidget {
             context: context,
             theme: theme,
             icon: Icons.language_rounded,
-            title: context.watch<LanguageProvider>().getText('language'),
+            title: AppLocalizations.of(context)!.language,
             trailing: context.watch<LanguageProvider>().isIndonesian
                 ? "Indonesia"
                 : "English",
@@ -384,7 +385,7 @@ class UserSettingPage extends StatelessWidget {
             context: context,
             theme: theme,
             icon: Icons.help_outline_rounded,
-            title: context.watch<LanguageProvider>().getText('help_support'),
+            title: AppLocalizations.of(context)!.helpSupport,
             onTap: () {
               ScaffoldMessenger.of(
                 context,
@@ -396,7 +397,7 @@ class UserSettingPage extends StatelessWidget {
             context: context,
             theme: theme,
             icon: Icons.info_outline_rounded,
-            title: context.watch<LanguageProvider>().getText('about'),
+            title: AppLocalizations.of(context)!.about,
             onTap: () {
               showAboutDialog(
                 context: context,
@@ -480,7 +481,7 @@ class UserSettingPage extends StatelessWidget {
           ),
         ),
         icon: const Icon(Icons.logout_rounded),
-        label: Text(context.watch<LanguageProvider>().getText('logout')),
+        label: Text(AppLocalizations.of(context)!.logout),
         onPressed: () async {
           // Show confirmation dialog
           final confirm = await showDialog<bool>(
@@ -489,7 +490,7 @@ class UserSettingPage extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: Text(context.watch<LanguageProvider>().getText('logout')),
+              title: Text(AppLocalizations.of(context)!.logout),
               content: const Text(
                 "Are you sure you want to sign out?",
               ), // Can localize this later too
@@ -497,7 +498,7 @@ class UserSettingPage extends StatelessWidget {
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(
-                    context.watch<LanguageProvider>().getText('cancel'),
+                    AppLocalizations.of(context)!.cancel,
                   ),
                 ),
                 ElevatedButton(
@@ -506,7 +507,7 @@ class UserSettingPage extends StatelessWidget {
                   ),
                   onPressed: () => Navigator.pop(ctx, true),
                   child: Text(
-                    context.watch<LanguageProvider>().getText('logout'),
+                    AppLocalizations.of(context)!.logout,
                   ),
                 ),
               ],

@@ -1,12 +1,16 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import '../config/theme_config.dart';
-import '../providers/exam_provider.dart';
-import 'exam_page.dart';
+import 'package:image/image.dart' as img;
 
-/// ExamPermissionPage - Request camera permission before starting exam
-/// This follows the web pattern of permission check before exam
+import '../providers/exam_provider.dart';
+import '../services/anti_cheat_service.dart';
+import 'exam_page.dart';
+import '../l10n/app_localizations.dart';
+
 class ExamPermissionPage extends StatefulWidget {
   final String courseUid;
   final String courseTitle;
@@ -21,40 +25,80 @@ class ExamPermissionPage extends StatefulWidget {
   State<ExamPermissionPage> createState() => _ExamPermissionPageState();
 }
 
-class _ExamPermissionPageState extends State<ExamPermissionPage> {
+class _ExamPermissionPageState extends State<ExamPermissionPage> with WidgetsBindingObserver {
   bool _isRequestingPermission = false;
+  bool _hasPermission = false;
+  
+  CameraController? _cameraController;
+  bool _isCameraInitialized = false;
+  final AntiCheatService _antiCheatService = AntiCheatService();
+  
+  // Calibration State
+  String _statusMessage = ""; // Initialized in didChange
+  Color _statusColor = Colors.orange;
+  bool _isReady = false;
+  
+  // Frame Processing
+  bool _isProcessingFrame = false;
+  DateTime _lastFrameTime = DateTime.now();
 
-  @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkCameraPermission();
   }
 
-  /// Check if camera permission is already granted
-  Future<void> _checkCameraPermission() async {
-    final status = await Permission.camera.status;
-    if (status.isGranted) {
-      if (mounted) {
-        context.read<ExamProvider>().setCameraPermission(true);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_statusMessage.isEmpty) {
+        _statusMessage = AppLocalizations.of(context)!.waitingForConnection;
+    }
+  }
+
+  // Stream Subscriptions
+  StreamSubscription? _connSub;
+  StreamSubscription? _statusSub;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+    if (state == AppLifecycleState.inactive) {
+      _cameraController?.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      if (_hasPermission) {
+        _initializeCamera();
       }
     }
   }
 
-  /// Request camera permission
+  Future<void> _checkCameraPermission() async {
+    final status = await Permission.camera.status;
+    if (status.isGranted) {
+      if (mounted) {
+        setState(() => _hasPermission = true);
+        context.read<ExamProvider>().setCameraPermission(true);
+        _initializeCamera();
+        _initializeAntiCheat();
+      }
+    }
+  }
+
   Future<void> _requestCameraPermission() async {
     if (_isRequestingPermission) return;
-
     setState(() => _isRequestingPermission = true);
 
     try {
       final status = await Permission.camera.request();
-
       if (!mounted) return;
 
       if (status.isGranted) {
-        // Permission granted - set state and navigate to exam
+        setState(() => _hasPermission = true);
         context.read<ExamProvider>().setCameraPermission(true);
-        _navigateToExam();
+        _initializeCamera();
+        _initializeAntiCheat();
       } else if (status.isDenied) {
         _showPermissionDeniedDialog();
       } else if (status.isPermanentlyDenied) {
@@ -62,9 +106,6 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
       }
     } catch (e) {
       debugPrint("Error requesting permission: $e");
-      if (mounted) {
-        _showErrorDialog();
-      }
     } finally {
       if (mounted) {
         setState(() => _isRequestingPermission = false);
@@ -72,8 +113,174 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
     }
   }
 
-  /// Navigate to exam page
-  void _navigateToExam() {
+  Future<void> _initializeCamera() async {
+    final cameras = await availableCameras();
+    final frontCamera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.front,
+      orElse: () => cameras.first,
+    );
+
+    _cameraController = CameraController(
+      frontCamera,
+      ResolutionPreset.medium,
+      enableAudio: false,
+      imageFormatGroup: ImageFormatGroup.yuv420,
+    );
+
+    try {
+      await _cameraController!.initialize();
+      if (mounted) {
+        setState(() => _isCameraInitialized = true);
+        _cameraController?.startImageStream(_processCameraImage);
+      }
+    } catch (e) {
+      debugPrint("Camera init error: $e");
+    }
+  }
+
+  void _initializeAntiCheat() {
+    _antiCheatService.init();
+    
+    // Force reconnect ensures backend recognizes fresh session
+    // This fixes the "zombie connection" issue on re-entry
+    if (_antiCheatService.isConnected) {
+       _antiCheatService.disconnect();
+       Future.delayed(const Duration(milliseconds: 500), () {
+         if (mounted) _antiCheatService.connect();
+       });
+    } else {
+       _antiCheatService.connect();
+    }
+
+    // Listen for connection changes
+    _connSub = _antiCheatService.connectionChangeStream.listen((connected) {
+      if (!mounted) return;
+      _updateConnectionUI(connected);
+    });
+
+    // Check immediate state (if already connected from singleton)
+    if (_antiCheatService.isConnected) {
+      _updateConnectionUI(true);
+    }
+
+    _statusSub = _antiCheatService.statusStream.listen((status) {
+      if (!mounted) return;
+      
+      final numFaces = status['num_faces'] as int? ?? 0;
+      final headAlert = status['head_alert'] as bool? ?? false;
+      final msg = status['status'] as String? ?? "Unknown";
+
+      bool ready = false;
+      String displayText = msg;
+      Color color = Colors.orange;
+
+      if (numFaces == 0) {
+        displayText = AppLocalizations.of(context)!.faceNotDetectedStatus;
+        color = Colors.red;
+      } else if (numFaces > 1) {
+        displayText = AppLocalizations.of(context)!.multipleFacesStatus;
+        color = Colors.red;
+      } else if (headAlert) {
+         displayText = AppLocalizations.of(context)!.faceScreenStatus;
+         color = Colors.orange;
+      } else {
+        displayText = AppLocalizations.of(context)!.readyForExam;
+        color = Colors.green;
+        ready = true;
+      }
+
+      setState(() {
+        _statusMessage = displayText;
+        _statusColor = color;
+        _isReady = ready;
+      });
+    });
+  }
+
+  void _updateConnectionUI(bool connected) {
+    setState(() {
+      if (connected) {
+        // If we were waiting for connection, update to waiting for face
+        if (_statusMessage == AppLocalizations.of(context)!.waitingForConnection) {
+          _statusMessage = AppLocalizations.of(context)!.waitingForFace;
+        }
+      } else {
+        _statusMessage = AppLocalizations.of(context)!.disconnectedStart;
+        _statusColor = Colors.red;
+        _isReady = false;
+      }
+    });
+  }
+
+  void _processCameraImage(CameraImage image) async {
+    final now = DateTime.now();
+    if (_isProcessingFrame || now.difference(_lastFrameTime).inMilliseconds < 500) {
+      return;
+    }
+
+    _isProcessingFrame = true;
+    _lastFrameTime = now;
+
+    try {
+      img.Image? processedImage;
+      if (image.format.group == ImageFormatGroup.yuv420) {
+        // Handle YUV420 strided
+        final int width = image.width;
+        final int height = image.height;
+        // uv strides unused for grayscale
+        
+        // Create grayscale image from Y plane (most efficient for face detection)
+        // We manually copy considering bytesPerRow (stride)
+        processedImage = img.Image(width: width, height: height, numChannels: 1);
+        
+        final yPlane = image.planes[0];
+        final yStride = yPlane.bytesPerRow;
+        final yBytes = yPlane.bytes;
+        
+        for (int y = 0; y < height; y++) {
+          for (int x = 0; x < width; x++) {
+             // Avoid out of bounds
+             final index = y * yStride + x;
+             if (index < yBytes.length) {
+               processedImage.setPixelR(x, y, yBytes[index]);
+             }
+          }
+        }
+      } else if (image.format.group == ImageFormatGroup.bgra8888) {
+         processedImage = img.Image.fromBytes(
+            width: image.width,
+            height: image.height,
+            bytes: image.planes[0].bytes.buffer,
+            order: img.ChannelOrder.bgra,
+        );
+      }
+
+      if (processedImage != null) {
+        // Rotate 270 degrees (common for front camera portrait on Android)
+        processedImage = img.copyRotate(processedImage, angle: -90);
+
+        final resized = img.copyResize(processedImage, width: 320);
+        final jpg = img.encodeJpg(resized, quality: 70);
+        final base64String = base64Encode(jpg);
+        _antiCheatService.sendFrame(base64String);
+      }
+    } catch (e) {
+      debugPrint("Frame processing error: $e");
+    } finally {
+      if (mounted) _isProcessingFrame = false;
+    }
+  }
+
+  void _startExam() {
+    // Stop camera here so ExamPage can take over
+    _cameraController?.stopImageStream();
+    // Disposal will happen in dispose() when navigating, 
+    // or we can explicitly dispose here if we want to be safe before pushReplacement.
+    // However, ExamPage creates its own controller. 
+    // Android camera hardware might validly support only 1 active open camera.
+    // So we should dispose here or await logic.
+    
+    // We navigate to ExamPage
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) => ExamPage(
@@ -84,98 +291,40 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
     );
   }
 
-  /// Show permission denied dialog
+  // Dialog helpers (kept from original)
   void _showPermissionDeniedDialog() {
-    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: context.surfaceColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Camera Permission Required',
-          style: theme.textTheme.titleLarge,
-        ),
-        content: Text(
-          'Camera access is required for exam monitoring. '
-          'Please grant camera permission to continue.',
-          style: theme.textTheme.bodyMedium,
-        ),
+        title: Text(AppLocalizations.of(context)!.permissionDenied),
+        content: Text(AppLocalizations.of(context)!.cameraPermissionMsg),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _requestCameraPermission();
-            },
-            child: const Text('Try Again'),
+            child: Text(AppLocalizations.of(context)!.ok),
           ),
         ],
       ),
     );
   }
 
-  /// Show open settings dialog (for permanently denied)
   void _showOpenSettingsDialog() {
-    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: context.surfaceColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Permission Permanently Denied',
-          style: theme.textTheme.titleLarge,
-        ),
-        content: Text(
-          'Camera permission has been permanently denied. '
-          'Please enable it in app settings to take the exam.',
-          style: theme.textTheme.bodyMedium,
-        ),
+        title: Text(AppLocalizations.of(context)!.permissionRequired),
+        content: Text(AppLocalizations.of(context)!.enableCameraMsg),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () {
-              openAppSettings();
               Navigator.pop(ctx);
+              openAppSettings();
             },
-            child: const Text('Open Settings'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Show error dialog
-  void _showErrorDialog() {
-    final theme = Theme.of(context);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.surfaceColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Error', style: theme.textTheme.titleLarge),
-        content: Text(
-          'An error occurred while requesting camera permission. '
-          'Please try again.',
-          style: theme.textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK'),
+            child: Text(AppLocalizations.of(context)!.settings),
           ),
         ],
       ),
@@ -184,161 +333,100 @@ class _ExamPermissionPageState extends State<ExamPermissionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    if (!_hasPermission) {
+      return _buildPermissionRequestUI();
+    }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Exam Permission'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.pop(context),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.calibrationCheck)),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: _isCameraInitialized && _cameraController != null && _cameraController!.value.isInitialized
+                    ? Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: AspectRatio(
+                          aspectRatio: _cameraController!.value.aspectRatio,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                CameraPreview(_cameraController!),
+                                // Face overlay
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: _statusColor.withOpacity(0.5),
+                                      width: 4,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    : const CircularProgressIndicator(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  Text(
+                    _statusMessage,
+                    style: TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold,
+                      color: _statusColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isReady ? _startExam : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _isReady ? Colors.green : Colors.grey,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        AppLocalizations.of(context)!.startExam,
+                        style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPermissionRequestUI() {
+    return Scaffold(
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.examPermission)),
       body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(32, 32, 32, 32 + bottomPadding),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Camera icon
-              Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      theme.colorScheme.primary.withOpacity(0.2),
-                      theme.colorScheme.secondary.withOpacity(0.2),
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.videocam_rounded,
-                  size: 80,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // Title
-              Text(
-                widget.courseTitle,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Subtitle
-              Text(
-                'Final Exam',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: context.textSecondary,
-                ),
-              ),
-
-              const SizedBox(height: 48),
-
-              // Permission explanation
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.info_outline_rounded,
-                      color: theme.colorScheme.secondary,
-                      size: 32,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Camera Access Required',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'We need camera access to monitor exam integrity. '
-                      'Your camera will be active during the exam.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: context.textSecondary,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 48),
-
-              // Request Permission Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: _isRequestingPermission
-                      ? null
-                      : _requestCameraPermission,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    elevation: 4,
-                  ),
-                  icon: _isRequestingPermission
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: theme.colorScheme.onPrimary,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.check_circle_outline_rounded,
-                          size: 24,
-                        ),
-                  label: Text(
-                    _isRequestingPermission
-                        ? 'Requesting Permission...'
-                        : 'Grant Camera Access',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Cancel button
-              TextButton(
-                onPressed: _isRequestingPermission
-                    ? null
-                    : () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: context.textSecondary, fontSize: 14),
-                ),
-              ),
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.videocam_rounded, size: 80, color: Colors.blue),
+            const SizedBox(height: 20),
+            Text(AppLocalizations.of(context)!.cameraAccessRequired, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: _requestCameraPermission,
+              child: Text(AppLocalizations.of(context)!.grantAccess),
+            )
+          ],
         ),
       ),
     );

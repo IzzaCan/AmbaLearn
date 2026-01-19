@@ -1,0 +1,189 @@
+{
+  "appName": "AmbaLearn",
+  "welcomeMessage": "Welcome back!",
+  "startExam": "Start Exam",
+  "continueLearning": "Continue Learning",
+  "courses": "Courses",
+  "profile": "Profile",
+  "settings": "Settings",
+  "language": "Language",
+  "theme": "Theme",
+  "darkMode": "Dark Mode",
+  "lightMode": "Light Mode",
+  "logout": "Log Out",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "submit": "Submit",
+  "next": "Next",
+  "previous": "Previous",
+  "loading": "Loading...",
+  "error": "Error",
+  "success": "Success",
+  
+  "examCalibration": "Calibration Check",
+  "cameraPermissionRequired": "Camera access is required for proctoring.",
+  "statusWaitingConnection": "Waiting for connection...",
+  "statusWaitingFace": "Waiting for face detection...",
+  "statusFaceNotDetected": "Face not detected",
+  "statusMultipleFaces": "Multiple faces detected",
+  "statusHeadAlert": "Please face the screen",
+  "statusReady": "Ready for exam ✅",
+  
+  "examViolationWarning": "⚠️ CHEATING DETECTED",
+  "examViolationMessage": "Please keep your eyes on the screen!",
+  "examTerminated": "Exam Terminated",
+  "examTerminatedMessage": "VIOLATION LIMIT EXCEEDED.\nYour exam is being automatically submitted.",
+
+  "welcomeBack": "Welcome Back!",
+  "signInContinue": "Sign in to continue",
+  "email": "Email",
+  "enterEmail": "Enter your email",
+  "password": "Password",
+  "enterPassword": "Enter your password",
+  "signIn": "Sign In",
+  "or": "OR",
+  "continueGoogle": "Continue with Google",
+  "noAccount": "Don't have an account?",
+  "signUp": "Sign Up",
+  "createAccount": "Create Account",
+  "signUpStarted": "Let's get you started",
+  "username": "Username",
+  "enterUsername": "Enter your username",
+  "alreadyAccount": "Already have an account?",
+  "appearance": "Appearance",
+  "account": "Account",
+  "notifications": "Notifications",
+  "helpSupport": "Help & Support",
+  "about": "About",
+  "thinking": "Thinking...",
+  "typeMessage": "Type a message...",
+
+  "monitoringActive": "Monitoring Active",
+  "faceNotDetected": "Face Not Detected",
+  "initializing": "Initializing...",
+  "normal": "Normal",
+  "cameraInitialized": "Camera initialized",
+  "noCameras": "No cameras available",
+  "error": "Error",
+  "ok": "OK",
+  "cancel": "Cancel",
+  "submit": "Submit",
+  "submitExam": "Submit Exam",
+  "submitExamQuestion": "Submit Exam?",
+  "submitExamConfirmAll": "You have answered all questions. Submit your exam now?",
+  "submitExamConfirmPartial": "You have answered {answered} of {total} questions. Unanswered questions will be marked as incorrect. Submit anyway?",
+  "@submitExamConfirmPartial": {
+    "placeholders": {
+      "answered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "failedToSubmit": "Failed to submit exam",
+  "exitExam": "Exit Exam?",
+  "exitExamConfirm": "Are you sure you want to exit? Your progress will be lost.",
+  "stay": "Stay",
+  "exit": "Exit",
+  "loadingExam": "Loading exam...",
+  "failedToLoadExam": "Failed to load exam",
+  "failedToLoadExamRetry": "Failed to load exam. Please try again.",
+  "goBack": "Go Back",
+  "violationStatus": "Violation: {count}/{max}",
+  "@violationStatus": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "cheatingDetected": "⚠️ CHEATING DETECTED",
+  "keepEyesOnScreen": "{detail}\nPlease keep your eyes on the screen!",
+  "@keepEyesOnScreen": {
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+  "questionTitle": "Question {current} of {total}",
+  "@questionTitle": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "answeredStatus": "Answered: {answered}/{total}",
+  "@answeredStatus": {
+    "placeholders": {
+      "answered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "questionHeader": "Question {number}",
+  "@questionHeader": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "previous": "Previous",
+  "next": "Next",
+  "submitting": "Submitting...",
+
+  "calibrationCheck": "Calibration Check",
+  "waitingForConnection": "Waiting for connection...",
+  "waitingForFace": "Waiting for face detection...",
+  "disconnectedStart": "Disconnected from Anti-Cheat Service",
+  "unknown": "Unknown",
+  "faceNotDetectedStatus": "Face not detected",
+  "multipleFacesStatus": "Multiple faces detected",
+  "faceScreenStatus": "Please face the screen",
+  "readyForExam": "Ready for exam ✅",
+  "startExam": "Start Exam",
+  "permissionDenied": "Permission Denied",
+  "cameraPermissionMsg": "Camera access is required for proctoring.",
+  "permissionRequired": "Permission Required",
+  "enableCameraMsg": "Please enable camera access in settings.",
+  "settings": "Settings",
+  "examPermission": "Exam Permission",
+  "cameraAccessRequired": "Camera Access Required",
+  "grantAccess": "Grant Access",
+  
+  "examResults": "Exam Results",
+  "noExamResults": "No exam results found",
+  "yourScore": "Your Score",
+  "passed": "PASSED",
+  "failed": "FAILED",
+  "grade": "Grade",
+  "correct": "Correct",
+  "statistics": "Statistics",
+  "totalQuestions": "Total Questions",
+  "correctAnswers": "Correct Answers",
+  "incorrectAnswers": "Incorrect Answers",
+  "accuracy": "Accuracy",
+  "questionDetails": "Question Details",
+  "correctStatus": "Correct",
+  "incorrectStatus": "Incorrect",
+  "yourAnswer": "Your answer: {answer}",
+  "@yourAnswer": {
+    "placeholders": {
+      "answer": { "type": "String" }
+    }
+  },
+  "correctAnswer": "Correct answer: {answer}",
+  "@correctAnswer": {
+    "placeholders": {
+      "answer": { "type": "String" }
+    }
+  },
+  "notAnswered": "Not answered",
+  "backToHome": "Back to Home",
+  "backToCourse": "Back to Course",
+  "whatToLearn": "What do you want to learn today?",
+  "topicPython": "Python Basics",
+  "topicML": "Machine Learning",
+  "topicWeb": "Web Development",
+  "teachMeAbout": "Teach me about {topic}",
+  "@teachMeAbout": {
+    "placeholders": {
+      "topic": { "type": "String" }
+    }
+  },
+  "voiceInput": "Voice input",
+  "sendMessage": "Send message"
+}
