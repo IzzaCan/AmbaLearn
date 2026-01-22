@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../config/theme_config.dart';
@@ -28,44 +29,6 @@ class ChatBubble extends StatelessWidget {
       return match.group(1);
     }
     return null;
-  }
-
-  List<TextSpan> _linkify(String text, TextStyle baseStyle) {
-    final RegExp linkRegExp = RegExp(
-      r"(https?:\/\/[^\s]+)",
-      caseSensitive: false,
-    );
-    final List<TextSpan> spans = [];
-    int lastMatchEnd = 0;
-    for (final Match match in linkRegExp.allMatches(text)) {
-      if (match.start > lastMatchEnd) {
-        spans.add(
-          TextSpan(
-            text: text.substring(lastMatchEnd, match.start),
-            style: baseStyle,
-          ),
-        );
-      }
-      final String url = match.group(0)!;
-      spans.add(
-        TextSpan(
-          text: url,
-          style: baseStyle.copyWith(color: isUser ? Colors.white : Colors.blue),
-          recognizer: TapGestureRecognizer()
-            ..onTap = () async {
-              final uri = Uri.parse(url);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-              }
-            },
-        ),
-      );
-      lastMatchEnd = match.end;
-    }
-    if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastMatchEnd), style: baseStyle));
-    }
-    return spans;
   }
 
   @override
@@ -138,18 +101,37 @@ class ChatBubble extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SelectableText.rich(
-                      TextSpan(
-                        children: _linkify(
-                          message,
-                          theme.textTheme.bodyMedium!.copyWith(
-                            color: isUser
-                                ? Colors.white
-                                : (isDark
-                                      ? AppColors.darkTextPrimary
-                                      : AppColors.lightTextPrimary),
-                            height: 1.5,
-                          ),
+                    MarkdownBody(
+                      data: message,
+                      selectable: true,
+                      onTapLink: (text, href, title) async {
+                        if (href != null) {
+                          final uri = Uri.parse(href);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri,
+                                mode: LaunchMode.externalApplication);
+                          }
+                        }
+                      },
+                      styleSheet: MarkdownStyleSheet(
+                        p: theme.textTheme.bodyMedium!.copyWith(
+                          color: isUser
+                              ? Colors.white
+                              : (isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary),
+                          height: 1.5,
+                        ),
+                        strong: theme.textTheme.bodyMedium!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isUser
+                              ? Colors.white
+                              : (isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary),
+                        ),
+                        a: theme.textTheme.bodyMedium!.copyWith(
+                          color: isUser ? Colors.white : Colors.blue,
                         ),
                       ),
                     ),
