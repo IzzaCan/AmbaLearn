@@ -1,6 +1,7 @@
 import 'package:capstone_layout/pages/exam_permission_page.dart';
 import 'package:capstone_layout/pages/homepage.dart';
 import 'package:capstone_layout/widgets/chat_bubble.dart';
+import 'package:capstone_layout/widgets/feedback_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -95,13 +96,38 @@ class _LessonsPageState extends State<LessonsPage> {
   Future<void> _onStartStep() async {
     final provider = context.read<CourseProvider>();
     final stepNumber = provider.activeStepNumber ?? 1;
-    await provider.startLessonStep(stepNumber);
+
+    // 1. Kick off the loading process in the background
+    // We don't await this immediately so the dialog can show up while it loads
+    final startFuture = provider.startLessonStep(stepNumber);
+
+    // 2. Check if this is the last step and show feedback dialog immediately
+    if (provider.currentCourse != null &&
+        provider.currentCourse!.steps.isNotEmpty &&
+        provider.currentCourse!.steps.last.stepNumber == stepNumber) {
+      if (mounted) {
+        await showDialog(
+          context: context,
+          barrierDismissible: false, // Cannot skip
+          builder: (_) => WillPopScope(
+            onWillPop: () async => false, // Prevent back button
+            child: FeedbackDialog(courseUid: provider.currentCourse!.uid),
+          ),
+        );
+      }
+    }
+
+    // 3. Await the start process to finish
+    await startFuture;
   }
 
   Future<void> _onSelectStep(int stepNumber) async {
     final provider = context.read<CourseProvider>();
     Navigator.pop(context);
     await provider.loadStepStatus(stepNumber);
+
+    // Check if this is the last step and show feedback dialog
+    // REMOVED: Logic moved to _onStartStep as requested
   }
 
   void _onSendMessage() {

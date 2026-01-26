@@ -179,7 +179,9 @@ class CourseProvider extends ChangeNotifier {
         // Step is already started - load history
         final history = response.data['history'] as List?;
         if (history != null && history.isNotEmpty) {
-          debugPrint("✅ Step already started - loaded ${history.length} messages");
+          debugPrint(
+            "✅ Step already started - loaded ${history.length} messages",
+          );
           _chatMessages = history
               .where((m) => m['role'] != 'system')
               .map((m) => ChatMessage.fromJson(m))
@@ -197,7 +199,6 @@ class CourseProvider extends ChangeNotifier {
       _isSendingMessage = false;
       notifyListeners();
       return true;
-
     } catch (e) {
       debugPrint("📥 GET error (expected for new step): $e");
       // 404 is normal for unstarted steps
@@ -229,11 +230,10 @@ class CourseProvider extends ChangeNotifier {
       // Step 1: POST start (like web's start_lesson POST)
       debugPrint("📤 POST $chatUrl - Starting lesson...");
       await _api.post(chatUrl, data: {"start": true});
-      
+
       // Don't check POST response - web doesn't either!
       // Just wait a moment for backend to save
       await Future.delayed(const Duration(milliseconds: 1500));
-
     } catch (e) {
       // Like web version - ignore POST errors, continue to GET
       debugPrint("⚠️ POST error (ignored): $e");
@@ -243,7 +243,7 @@ class CourseProvider extends ChangeNotifier {
     debugPrint("🔄 Reloading step status after start...");
     _isSendingMessage = false;
     notifyListeners();
-    
+
     return await loadStepStatus(stepNumber);
   }
 
@@ -296,6 +296,25 @@ class CourseProvider extends ChangeNotifier {
 
     _isSendingMessage = false;
     notifyListeners();
+    return false;
+  }
+
+  /// Submit course feedback
+  Future<bool> submitFeedback(String courseUid, String comment) async {
+    if (comment.trim().isEmpty) return false;
+
+    try {
+      final response = await _api.post(
+        ApiConfig.courseFeedback(courseUid),
+        data: {"comment": comment.trim()},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint("Failed to submit feedback: $e");
+    }
     return false;
   }
 
