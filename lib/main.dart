@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
 import 'l10n/app_localizations.dart';
 import 'config/theme_config.dart';
-import 'pages/homepage.dart';
-import 'pages/courses.dart';
-import 'pages/lessons.dart';
-import 'pages/loginpage.dart';
-import 'pages/registerpage.dart';
-import 'pages/user_settings_page.dart';
+
+import 'app_entry.dart';
+
+// PROVIDERS
 import 'providers/auth_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/course_provider.dart';
 import 'providers/exam_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/language_provider.dart';
+import 'providers/user_provider.dart';
+// PAGES
+import 'pages/loginpage.dart';
+import 'pages/registerpage.dart';
+import 'pages/user_settings_page.dart';
+import 'pages/courses.dart';
+import 'pages/lessons.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +52,9 @@ class AmbaLearn extends StatelessWidget {
       providers: [
         ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider.value(value: languageProvider),
+
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => CourseProvider()),
         ChangeNotifierProvider(create: (_) => ExamProvider()),
@@ -56,10 +64,11 @@ class AmbaLearn extends StatelessWidget {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: "AmbaLearn",
+
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.materialThemeMode,
-            
+
             // Localization
             locale: Provider.of<LanguageProvider>(context).locale,
             localizationsDelegates: const [
@@ -68,16 +77,15 @@ class AmbaLearn extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: const [
-              Locale('en'),
-              Locale('id'),
-            ],
+            supportedLocales: const [Locale('en'), Locale('id')],
 
-            initialRoute: '/login',
+            /// GERBANG APLIKASI
+            home: const AppEntry(),
+
+            /// routes
             routes: {
               '/login': (context) => const LoginPage(),
               '/register': (context) => const RegisterPage(),
-              '/home': (context) => const HomePage(),
               '/user_settings': (context) => const UserSettingPage(),
               '/courses': (context) => const CoursesPage(),
               '/lessons': (context) => const LessonsPage(),

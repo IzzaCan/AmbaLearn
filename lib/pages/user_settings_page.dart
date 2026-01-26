@@ -8,6 +8,7 @@ import '../providers/chat_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/language_provider.dart';
+import 'edit_profile_page.dart';
 import 'loginpage.dart';
 import '../l10n/app_localizations.dart';
 
@@ -57,10 +58,7 @@ class UserSettingPage extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Account Section
-            _buildSectionTitle(
-              context,
-              AppLocalizations.of(context)!.account,
-            ),
+            _buildSectionTitle(context, AppLocalizations.of(context)!.account),
             const SizedBox(height: 12),
             _buildAccountOptions(context, theme),
 
@@ -156,9 +154,14 @@ class UserSettingPage extends StatelessWidget {
                 color: Colors.white,
                 size: 20,
               ),
+
+              // Add at the top: import 'edit_profile_page.dart';
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Edit profile coming soon")),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EditProfilePage(),
+                  ),
                 );
               },
             ),
@@ -497,18 +500,14 @@ class UserSettingPage extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(
-                    AppLocalizations.of(context)!.cancel,
-                  ),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.errorColor,
                   ),
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: Text(
-                    AppLocalizations.of(context)!.logout,
-                  ),
+                  child: Text(AppLocalizations.of(context)!.logout),
                 ),
               ],
             ),

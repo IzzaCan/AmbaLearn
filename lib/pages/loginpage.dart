@@ -6,8 +6,8 @@ import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../providers/auth_provider.dart';
 
-import 'homepage.dart';
 import 'registerpage.dart';
+import '../app_entry.dart';
 import '../l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
@@ -234,28 +234,28 @@ class _LoginPageState extends State<LoginPage>
                               emailC.text,
                               passC.text,
                             );
+
                             if (!mounted) return;
+
                             if (res != null) {
                               ScaffoldMessenger.of(
                                 context,
                               ).showSnackBar(SnackBar(content: Text(res)));
                             } else {
-                              Navigator.pushReplacement(
-                                context,
+                              if (!mounted) return;
+                              Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder: (_) => const HomePage(),
+                                  builder: (context) => const AppEntry(),
                                 ),
+                                (route) => false,
                               );
                             }
                           },
                     child: auth.isLoading
-                        ? SizedBox(
+                        ? const SizedBox(
                             height: 24,
                             width: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: theme.colorScheme.onPrimary,
-                            ),
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
                           )
                         : Text(AppLocalizations.of(context)!.signIn),
                   ),
@@ -300,11 +300,11 @@ class _LoginPageState extends State<LoginPage>
                                 context,
                               ).showSnackBar(SnackBar(content: Text(res)));
                             } else {
-                              Navigator.pushReplacement(
-                                context,
+                              Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder: (_) => const HomePage(),
+                                  builder: (context) => const AppEntry(),
                                 ),
+                                (route) => false,
                               );
                             }
                           },
