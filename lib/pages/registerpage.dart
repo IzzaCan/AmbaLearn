@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../providers/auth_provider.dart';
 
-import 'loginpage.dart';
+import '../app_entry.dart';
 import '../l10n/app_localizations.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -251,10 +251,9 @@ class _RegisterPageState extends State<RegisterPage>
                                   backgroundColor: context.successColor,
                                 ),
                               );
-                              Navigator.pushReplacement(
-                                context,
+                              Navigator.of(context).pushReplacement(
                                 MaterialPageRoute(
-                                  builder: (_) => const LoginPage(),
+                                  builder: (_) => const AppEntry(),
                                 ),
                               );
                             }
@@ -284,9 +283,8 @@ class _RegisterPageState extends State<RegisterPage>
                       ),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginPage()),
+                      onPressed: () => Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const AppEntry()),
                       ),
                       child: Text(
                         AppLocalizations.of(context)!.signIn,

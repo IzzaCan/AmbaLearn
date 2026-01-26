@@ -1,6 +1,8 @@
 class ApiConfig {
   /// Base URL
-  static const String baseUrl = 'http://45.156.85.205:8080';
+  static const String baseUrl = 'http://127.0.0.1:8080';
+  // static const String baseUrl = 'http://192.168.1.8:8080';
+  // static const String baseUrl = 'http://45.156.85.205:8080';
   static const String antiCheatBaseUrl = 'http://45.156.85.205:5001';
 
   /// Timeouts
@@ -14,6 +16,9 @@ class ApiConfig {
   static const String logout = '/logout';
   static const String currentUser = '/@me';
   static const String googleAuth = '/auth/google';
+
+  /// User
+  static const String updateUser = '/user/update';
 
   /// Courses
   static const String courses = '/courses';
