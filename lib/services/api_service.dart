@@ -103,6 +103,16 @@ class ApiService {
         clientId: ApiConfig.googleClientIdWeb,
         scopes: ['email', 'profile'],
       );
+      // Disconnect attempts to disconnect the user from the app
+      // This is what forces the account picker to show up next time
+      try {
+        if (await googleSignIn.isSignedIn()) {
+          await googleSignIn.disconnect();
+        }
+      } catch (e) {
+        log("Google DISCONNECT Error: $e");
+      }
+
       await googleSignIn.signOut();
     } catch (e) {
       log("Google LOGOUT Error: $e");
